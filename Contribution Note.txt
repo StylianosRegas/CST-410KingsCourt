@@ -1,0 +1,5 @@
+Contribution Note
+Chase Grigsby: Wrote GDD part 2, part 3, designed the core system of the game, created personal branch, play tested
+Styli Regas: Wrote GDD title page, table of contents, Part 4, part 6,created personal branch, set up unity and git hub, play tested
+Emma Schaffner: Wrote GDD part 5, created personal branch, Play tested
+Chris Luciano: Created digital models to 3d print of our pieces, wrote GDD part 7, created personal branch, play tested, created an index of pieces
