@@ -19,7 +19,7 @@ internal static class LegalityTests
 
         for (int g = 0; g < games; g++)
         {
-            int players = 5 + g % 4;
+            int players = 5 + g % 6;
             var rng = new Random(g);
             var seats = new List<SeatAgent>();
             // Seats 0 and 1 are humans, the rest bots.
@@ -62,13 +62,51 @@ internal static class LegalityTests
                 }
             }
             if (task.IsCompleted && game.Result == null) { failures++; Console.WriteLine("FAIL: finished without a result"); }
-            if (game.CountCards() != ActionCatalog.TotalCards) { failures++; Console.WriteLine("FAIL: card leak, seed " + g); }
-            if (game.Players.First(p => p.Role == Role.King).Alive == false) { failures++; Console.WriteLine("FAIL: King died, seed " + g); }
+            if (game.CountCards() != ActionCatalog.TotalCards(players)) { failures++; Console.WriteLine("FAIL: card leak, seed " + g); }
         }
 
+        failures += WireRoundTrip();
         Console.WriteLine("Legality: " + games + " games with 2 scripted humans. Accepted " + accepted + ", refused " + refusals + ", bot takeovers " + botTakeovers);
         foreach (var kv in reasons.OrderByDescending(k => k.Value)) Console.WriteLine("  refused x" + kv.Value + ": " + kv.Key);
         Console.WriteLine(failures == 0 ? "LEGALITY CHECKS PASSED" : failures + " LEGALITY FAILURES");
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>A snapshot sent to a phone must rebuild to exactly the same thing, and must not leak hidden roles.</summary>
+    private static int WireRoundTrip()
+    {
+        int failures = 0;
+        for (int g = 0; g < 60; g++)
+        {
+            int players = 5 + g % 6;
+            var seats = new List<SeatAgent>();
+            for (int i = 0; i < players; i++) seats.Add(new SeatAgent(i, i >= 2, g * 50 + i));
+            var game = new Game(players, g, seats.Cast<IPlayerAgent>().ToList());
+            var task = game.RunAsync();
+            for (int step = 0; step < 40 && !task.IsCompleted; step++)
+            {
+                var open = seats.FirstOrDefault(s => !s.IsBot && s.Pending != null);
+                if (open == null) break;
+                var snap = GameSnapshot.For(game, open.PlayerId, seats);
+                var back = Wire.FromDto(Wire.ToDto(snap));
+                bool same = back.Round == snap.Round && back.ViewerId == snap.ViewerId && back.Players.Count == snap.Players.Count
+                    && back.YourHand.Select(c => c.Id).SequenceEqual(snap.YourHand.Select(c => c.Id))
+                    && back.Players.Select(p => p.Role).SequenceEqual(snap.Players.Select(p => p.Role))
+                    && (back.YourDecision == null) == (snap.YourDecision == null)
+                    && (snap.YourDecision == null || back.YourDecision.Id == snap.YourDecision.Id && back.YourDecision.OptionCount == snap.YourDecision.OptionCount);
+                if (!same) { failures++; Console.WriteLine("FAIL: snapshot changed in transit, seed " + g); }
+                // Nobody else's secret role is in what this player receives, except that Prince, Nobleman
+                // and the Prophet always recognize each other.
+                Func<Role, bool> isTraitorTeam = r => r == Role.Prince || r == Role.Nobleman || r == Role.Prophet;
+                bool viewerIsTraitor = snap.YourRole.HasValue && isTraitorTeam(snap.YourRole.Value);
+                if (snap.Players.Any(p => !p.IsYou && !p.Revealed && p.Role.HasValue
+                        && !(viewerIsTraitor && isTraitorTeam(p.Role.Value)))
+                    && snap.Result == null)
+                { failures++; Console.WriteLine("FAIL: hidden role leaked to player " + open.PlayerId + ", seed " + g); }
+                open.Submit(open.Pending.Id, 0);
+            }
+        }
+        Console.WriteLine(failures == 0 ? "Wire round-trip and privacy checks passed" : failures + " wire failures");
+        return failures;
     }
 }

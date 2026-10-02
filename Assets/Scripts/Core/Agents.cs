@@ -14,13 +14,18 @@ namespace KingsCourt.Core
         public readonly ChoiceKind Kind;
         /// <summary>Optional extra text per option (for example who played a face-up card).</summary>
         public readonly IReadOnlyList<string> Notes;
+        /// <summary>Mead's effect: even the picker can't see these cards' faces while choosing (they pick
+        /// a position, not a card). Whether the card list itself carries real data is unaffected — this is
+        /// purely a display instruction for the UI.</summary>
+        public readonly bool Blind;
 
-        public Choice(int actorId, string prompt, ChoiceKind kind = ChoiceKind.Target, IReadOnlyList<string> notes = null)
+        public Choice(int actorId, string prompt, ChoiceKind kind = ChoiceKind.Target, IReadOnlyList<string> notes = null, bool blind = false)
         {
             ActorId = actorId;
             Prompt = prompt;
             Kind = kind;
             Notes = notes;
+            Blind = blind;
         }
     }
 
@@ -76,6 +81,7 @@ namespace KingsCourt.Core
         public List<int> PlayerIds = new List<int>();
         public List<ActionCard> Cards = new List<ActionCard>();
         public List<string> Notes = new List<string>();
+        public bool Blind;
 
         public int OptionCount
         {
@@ -147,7 +153,7 @@ namespace KingsCourt.Core
 
         private Decision NewDecision(Choice choice, OptionType type)
         {
-            var d = new Decision { Id = nextDecisionId++, ActorId = PlayerId, Kind = choice.Kind, Prompt = choice.Prompt, Type = type };
+            var d = new Decision { Id = nextDecisionId++, ActorId = PlayerId, Kind = choice.Kind, Prompt = choice.Prompt, Type = type, Blind = choice.Blind };
             if (choice.Notes != null) d.Notes.AddRange(choice.Notes);
             return d;
         }
@@ -181,6 +187,9 @@ namespace KingsCourt.Core
             tcs.SetResult(index);   // the game may continue (and open the next decision) inside this call
             return SubmitResult.Accept();
         }
+
+        /// <summary>Hand a bot seat to a human (used when a phone joins before the game starts).</summary>
+        public void BecomeHuman() { IsBot = false; }
 
         /// <summary>A bot takes over this seat, answering any open question on the player's behalf.</summary>
         public void BecomeBot()

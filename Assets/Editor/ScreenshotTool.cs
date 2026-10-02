@@ -30,7 +30,7 @@ namespace KingsCourt.EditorTools
 
             // Menus.
             var c = NewController(); c.ShowStart(); Shot(c, "01_start_screen");
-            c = NewController(); c.ShowLobby(); Shot(c, "02_waiting_lobby");
+            c = NewController(); c.HostGame(); Shot(c, "02_waiting_lobby");
             c = NewController(); c.ShowStart(); c.ShowSettings(); Shot(c, "03_settings");
             c = NewController(); c.ShowStart(); c.ShowHelp(); Shot(c, "04_help_round");
             c = NewController(); c.ShowStart(); c.ShowHelp(); c.HelpPanel.ShowRoles(); Shot(c, "05_help_roles");

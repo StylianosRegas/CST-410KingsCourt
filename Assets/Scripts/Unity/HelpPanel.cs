@@ -36,6 +36,10 @@ namespace KingsCourt.UnityLayer
             content = UiKit.Rect(viewport, "Content");
             content.anchorMin = new Vector2(0, 1); content.anchorMax = new Vector2(1, 1); content.pivot = new Vector2(.5f, 1);
             content.anchoredPosition = Vector2.zero;
+            // A fresh RectTransform defaults to sizeDelta (100, 100). Left unset, that made this stretched
+            // content 100px wider than its own viewport mask (50px overflowing past each edge, every line,
+            // not just wrapped ones) — the actual cause of the clipped "How to Play" text.
+            content.sizeDelta = Vector2.zero;
             var v = content.gameObject.AddComponent<VerticalLayoutGroup>();
             v.spacing = 10; v.padding = new RectOffset(20, 20, 16, 16);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = false;
@@ -79,7 +83,7 @@ namespace KingsCourt.UnityLayer
             Clear();
             Paragraph("The goal",
                 "Loyalists (blue) protect the King. They win when both Traitors, the Prince and the Nobleman, have been executed.\n" +
-                "Traitors (red) win if the Prince sits on the throne for 2 rounds in a row.\n" +
+                "Traitors (red) win if the Prince sits on the throne for 3 rounds in a row.\n" +
                 "Chaos roles (purple) play for themselves. The Jester wins only by being executed. The Beggar counts as a Loyalist until he is revealed, then he joins the Traitors.");
             Paragraph("Every round",
                 "1.  The thronebearer (whoever sits on the throne) names a Trusted Advisor.\n" +
@@ -88,7 +92,7 @@ namespace KingsCourt.UnityLayer
                 "4.  The thronebearer picks one of those two and it happens. Hands then refill to 3 cards.");
             Paragraph("Secret roles",
                 "Your role is hidden until an action card reveals it. Revealed players get their role piece on the table. " +
-                "A role's ability can only be used once it is revealed (the Elder's is always on). The King is always revealed and can never be executed.");
+                "A role's ability can only be used once it is revealed (the Elder's and the Martyr's can be used while still hidden). The King is always revealed from the start, but is otherwise just another Loyalist - he can be executed like anyone else.");
             Paragraph("Dice and the deck",
                 "\"Roll the die\" cards roll one face per seat. The seat that comes up is affected; an empty seat does nothing. " +
                 "When the deck runs out, the discard pile is shuffled back in.");
@@ -101,7 +105,7 @@ namespace KingsCourt.UnityLayer
         public void ShowRoles()
         {
             Clear();
-            foreach (var role in new[] { Role.King, Role.Queen, Role.Knight, Role.Elder, Role.CourtWizard, Role.Prince, Role.Nobleman, Role.Jester, Role.Beggar })
+            foreach (var role in new[] { Role.King, Role.Queen, Role.Knight, Role.Elder, Role.CourtWizard, Role.Medium, Role.Prince, Role.Nobleman, Role.Prophet, Role.Jester, Role.Beggar, Role.Reaper, Role.Lovers })
             {
                 var row = UiKit.HStack(content, "Role " + role, 20, TextAnchor.MiddleLeft);
                 UiKit.Size(row, 1200, 110);
@@ -121,7 +125,7 @@ namespace KingsCourt.UnityLayer
         public void ShowCards()
         {
             Clear();
-            Paragraph(null, "The action deck has " + ActionCatalog.TotalCards + " cards. Number in brackets = copies in the deck.");
+            Paragraph(null, "The action deck has " + ActionCatalog.TotalCards(5) + " cards (the deck doubles in size at 8 or more players). Number in brackets = copies in the deck.");
             foreach (var e in ActionCatalog.Entries)
             {
                 var cat = CardInfo.Category(e.Effect);

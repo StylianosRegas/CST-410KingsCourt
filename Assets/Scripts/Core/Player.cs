@@ -6,7 +6,7 @@ namespace KingsCourt.Core
     {
         public readonly int Id;
         public string Name { get; private set; }
-        public readonly Role Role;
+        public Role Role { get; private set; }
         public int Seat;
         public bool Alive = true;
         public bool Revealed;
@@ -23,6 +23,9 @@ namespace KingsCourt.Core
         }
 
         public void Rename(string name) { if (!string.IsNullOrEmpty(name)) Name = name; }
+
+        /// <summary>Admin cheats only - reassigns a player's role mid-game.</summary>
+        public void AdminSetRole(Role role) { Role = role; }
 
         /// <summary>Beggar is a loyalist until revealed, then a traitor.</summary>
         public Faction EffectiveFaction

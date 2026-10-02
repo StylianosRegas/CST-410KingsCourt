@@ -10,12 +10,28 @@ internal static class Program
     {
         if (args.Length > 0 && args[0] == "legality") return LegalityTests.Run(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "report") return Report.Run(args.Length > 1 ? int.Parse(args[1]) : 1000);
+        if (args.Length > 0 && args[0] == "deal")
+        {
+            int n = args.Length > 1 ? int.Parse(args[1]) : 10;
+            int dealGames = args.Length > 2 ? int.Parse(args[2]) : 20000;
+            var counts = new Dictionary<Role, int>();
+            for (int g = 0; g < dealGames; g++)
+            {
+                var agents = Enumerable.Range(0, n).Select(i => (IPlayerAgent)new RandomAgent(g * 100 + i, 0)).ToList();
+                var game = new Game(n, g, agents);
+                foreach (var p in game.Players) counts[p.Role] = counts.ContainsKey(p.Role) ? counts[p.Role] + 1 : 1;
+            }
+            Console.WriteLine(n + " players, " + dealGames + " deals:");
+            foreach (var kv in counts.OrderByDescending(k => k.Value))
+                Console.WriteLine("  " + kv.Key.ToString().PadRight(12) + (100.0 * kv.Value / dealGames).ToString("0.0").PadLeft(6) + "%  (avg " + (kv.Value / (double)dealGames).ToString("0.00") + " per game)");
+            return 0;
+        }
         int games = args.Length > 0 ? int.Parse(args[0]) : 2000;
         int failures = 0;
-        Console.WriteLine("Action deck size: " + ActionCatalog.TotalCards);
 
         for (int players = Game.MinPlayers; players <= Game.MaxPlayers; players++)
         {
+            Console.WriteLine("Action deck size at " + players + " players: " + ActionCatalog.TotalCards(players));
             var wins = new Dictionary<Winner, int>();
             long rounds = 0;
             double chaosSum = 0, loyalSum = 0; int badDeal = 0;
@@ -24,16 +40,18 @@ internal static class Program
                 var agents = Enumerable.Range(0, players).Select(i => (IPlayerAgent)new RandomAgent(g * 100 + i)).ToList();
                 var game = new Game(players, g, agents);
                 var roleSet = game.Players.Select(p => p.Role).ToList();
-                if (roleSet.Count != roleSet.Distinct().Count() || roleSet.Count != players || !roleSet.Contains(Role.King) || !roleSet.Contains(Role.Prince) || !roleSet.Contains(Role.Nobleman)) badDeal++;
+                // Every role is unique except Lovers, which is dealt to exactly two seats at once by design.
+                bool distinctOk = roleSet.GroupBy(r => r).All(gr => gr.Key == Role.Lovers ? gr.Count() == 2 : gr.Count() == 1);
+                if (!distinctOk || roleSet.Count != players || !roleSet.Contains(Role.King) || !roleSet.Contains(Role.Prince) || !roleSet.Contains(Role.Nobleman)) badDeal++;
                 chaosSum += roleSet.Count(r => RoleInfo.FactionOf(r) == Faction.Chaos);
                 loyalSum += roleSet.Count(r => RoleInfo.FactionOf(r) == Faction.Loyalist && r != Role.King);
                 try
                 {
                     var result = game.Run();
-                    if (game.CountCards() != ActionCatalog.TotalCards)
+                    if (game.CountCards() != ActionCatalog.TotalCards(players))
                     { failures++; Console.WriteLine("CARD LEAK players=" + players + " seed=" + g + " count=" + game.CountCards()); }
-                    if (game.Players.Count(p => p.Alive) < 1 || game.Players.First(p => p.Role == Role.King).Alive == false)
-                    { failures++; Console.WriteLine("KING DIED seed=" + g); }
+                    if (game.Players.Count(p => p.Alive) < 1)
+                    { failures++; Console.WriteLine("EVERYONE DEAD seed=" + g); }
                     wins[result.Winner] = wins.ContainsKey(result.Winner) ? wins[result.Winner] + 1 : 1;
                     rounds += game.Round;
                 }

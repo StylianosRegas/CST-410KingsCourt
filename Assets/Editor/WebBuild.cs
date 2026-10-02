@@ -21,6 +21,11 @@ namespace KingsCourt.EditorTools
             PlayerSettings.WebGL.decompressionFallback = false;
             PlayerSettings.defaultScreenWidth = 1280;
             PlayerSettings.defaultScreenHeight = 720;
+            // Assets/WebGLTemplates/KingsCourt: fills the whole browser viewport on every device instead of
+            // Unity's stock template's small fixed-size box on desktop, which rendered card text (and
+            // everything else) at a much lower effective pixel density there than on a phone filling its
+            // real screen — that's what made text look sharp on a phone but blurry on a laptop/PC.
+            PlayerSettings.WebGL.template = "PROJECT:KingsCourt";
 
             var options = new BuildPlayerOptions
             {

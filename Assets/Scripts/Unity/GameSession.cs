@@ -14,6 +14,8 @@ namespace KingsCourt.UnityLayer
         public static bool ChatEnabled { get { return GetInt("chat", 0) == 1; } set { SetInt("chat", value ? 1 : 0); } }
         /// <summary>0 = relaxed, 1 = normal, 2 = fast (only changes how long the game pauses between steps).</summary>
         public static int Speed { get { return Mathf.Clamp(GetInt("speed", 1), 0, 2); } set { SetInt("speed", value); } }
+        /// <summary>Blank = the server the page was loaded from (phones) or localhost (editor).</summary>
+        public static string ServerUrl { get { return GetString("server", ""); } set { SetString("server", value ?? ""); } }
         public static string PlayerName { get { return GetString("name", "Player 1"); } set { SetString("name", value); } }
 
         /// <summary>Tests set this to 0 to skip every pause.</summary>
@@ -68,13 +70,16 @@ namespace KingsCourt.UnityLayer
     /// device (everyone else is a bot). The network layer will put remote players in the other seats: it only
     /// has to send each player their GameSnapshot and call SeatAgent.Submit with what they answer.
     /// </summary>
-    public sealed class GameSession
+    public sealed class GameSession : IPlayerSession
     {
         public readonly Game Game;
         public readonly List<SeatAgent> Seats;
         public readonly int LocalPlayerId;
-        public readonly string JoinCode;
+        public string JoinCode { get; private set; }
         public event Action Updated;
+        // Never raised for a local game: Submit() answers directly. They exist so the UI treats every game the same way.
+        public event Action<string> Refused { add { } remove { } }
+        public event Action<string> Ended { add { } remove { } }
 
         private readonly Pacer pacer;
         private bool running;
@@ -126,6 +131,13 @@ namespace KingsCourt.UnityLayer
         }
 
         /// <summary>The local player leaves: a bot takes the seat so the game (for anyone else) carries on.</summary>
+        /// <summary>A phone joined before the start: this seat is now a human, and the player picks the name.</summary>
+        public void AssignHuman(int playerId, string name)
+        {
+            Seats[playerId].BecomeHuman();
+            Game.Players[playerId].Rename(name);
+        }
+
         public void LeaveTable()
         {
             Seats[LocalPlayerId].BecomeBot();

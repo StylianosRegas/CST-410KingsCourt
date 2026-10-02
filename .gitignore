@@ -77,3 +77,12 @@ crashlytics-build.properties
 # Rules simulator build output
 /Tools/RulesSim/bin/
 /Tools/RulesSim/obj/
+
+# Relay server
+/Server/node_modules/
+
+# Local tool caches (contain machine-local absolute paths)
+.impeccable/
+
+# Auto-generated IDE solution file (same reason *.sln/*.csproj are already ignored above)
+*.slnx

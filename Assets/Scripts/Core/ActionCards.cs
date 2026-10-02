@@ -30,6 +30,7 @@ namespace KingsCourt.Core
         FaceUpNextRound,
         EnactTwoNextRound,
         AllAdviceToThronebearerNextRound,
+        BlindNextRound,
 
         DieSwapWithThronebearer,
         ChooseSwapSeat,
@@ -55,8 +56,10 @@ namespace KingsCourt.Core
     }
 
     /// <summary>
-    /// Source of truth: "Action Card Index.docx". Duplicate cells in the index were merged into one
-    /// entry with the summed count; (xN) markers are honoured. The index totals 43 cards, the GDD says 50.
+    /// Source of truth: "Action Card Index.docx" plus cards added after playtesting. Duplicate cells in
+    /// the original index were merged into one entry with the summed count; (xN) markers are honoured.
+    /// The original index totalled 43 cards (the GDD said 50); "Mead" (x2) was added 2026-09-29 after
+    /// playtesting feedback, bringing the deck to 45.
     /// </summary>
     public static class ActionCatalog
     {
@@ -94,8 +97,9 @@ namespace KingsCourt.Core
             new Entry(ActionEffect.DieNextTrustedAdvisor, "Roll the die, that advisor is next round's trusted advisor", 2),
             new Entry(ActionEffect.NextTrustedMustReveal, "The next trusted advisor must reveal themselves", 1),
             new Entry(ActionEffect.FaceUpNextRound, "All advisors play their cards face up next round", 1),
-            new Entry(ActionEffect.EnactTwoNextRound, "Next round the thronebearer chooses 2 action cards", 2),
+            new Entry(ActionEffect.EnactTwoNextRound, "Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them", 2),
             new Entry(ActionEffect.AllAdviceToThronebearerNextRound, "Next round all advice cards are given to the thronebearer instead of the trusted advisor", 1),
+            new Entry(ActionEffect.BlindNextRound, "Next round, nobody may look at any card's face - not your hand, not what's kept, not what's enacted", 2),
 
             new Entry(ActionEffect.DieSwapWithThronebearer, "Roll the die, the thronebearer swaps places with that seat", 2),
             new Entry(ActionEffect.ChooseSwapSeat, "The thronebearer chooses an advisor to swap seats with", 4),
@@ -104,22 +108,23 @@ namespace KingsCourt.Core
             new Entry(ActionEffect.RotateLeft, "All players rotate one seat to the left", 1),
         };
 
-        public static int TotalCards
+        /// <summary>At 8+ players the deck doubles (every entry's count x2) so the table doesn't run dry round after round.</summary>
+        public static int Multiplier(int playerCount) { return playerCount >= 8 ? 2 : 1; }
+
+        public static int TotalCards(int playerCount)
         {
-            get
-            {
-                int n = 0;
-                foreach (var e in Entries) n += e.Count;
-                return n;
-            }
+            int n = 0;
+            foreach (var e in Entries) n += e.Count;
+            return n * Multiplier(playerCount);
         }
 
-        public static List<ActionCard> BuildDeck()
+        public static List<ActionCard> BuildDeck(int playerCount)
         {
+            int mult = Multiplier(playerCount);
             var deck = new List<ActionCard>();
             int id = 0;
             foreach (var e in Entries)
-                for (int i = 0; i < e.Count; i++)
+                for (int i = 0; i < e.Count * mult; i++)
                     deck.Add(new ActionCard(id++, e.Effect, e.Text));
             return deck;
         }

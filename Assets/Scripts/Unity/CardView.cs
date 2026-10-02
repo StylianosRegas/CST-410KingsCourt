@@ -13,8 +13,8 @@ namespace KingsCourt.UnityLayer
     /// </summary>
     public sealed class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
-        public const float Width = 170f;
-        public const float Height = 244f;
+        public const float Width = 196f;
+        public const float Height = 280f;
 
         public ActionCard Card { get; private set; }
         public int Index;
@@ -135,6 +135,7 @@ namespace KingsCourt.UnityLayer
         {
             playable = isPlayable;
             selected = isSelected;
+            if (selected) transform.SetAsLastSibling();   // a selected card must draw over its neighbors too
             if (!Application.isPlaying) Apply(1f);   // edit mode (screenshots) has no Update loop
         }
 
@@ -143,7 +144,7 @@ namespace KingsCourt.UnityLayer
         private void Apply(float k)
         {
             float targetLift = selected ? 52f : (hover && playable ? 22f : 0f);
-            float targetScale = selected ? 1.16f : (hover && playable ? 1.07f : 1f);
+            float targetScale = selected ? 1.10f : (hover && playable ? 1.07f : 1f);
             lift = Mathf.Lerp(lift, targetLift, k);
             scale = Mathf.Lerp(scale, targetScale, k);
             visual.anchoredPosition = new Vector2(0, lift);
@@ -159,7 +160,7 @@ namespace KingsCourt.UnityLayer
         }
 
         public void OnPointerClick(PointerEventData e) { if (Clicked != null) Clicked(this); }
-        public void OnPointerEnter(PointerEventData e) { hover = true; }
+        public void OnPointerEnter(PointerEventData e) { hover = true; transform.SetAsLastSibling(); }   // lifted card must draw over its neighbors, or its text hides behind them
         public void OnPointerExit(PointerEventData e) { hover = false; }
     }
 }

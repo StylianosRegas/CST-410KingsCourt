@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>Unity Web Player | {{{ PRODUCT_NAME }}}</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+  </head>
+  <body>
+    <div id="unity-container">
+      <div id="unity-fullscreen-container">
+        <canvas id="unity-canvas" width="{{{ WIDTH }}}" height="{{{ HEIGHT }}}" tabindex="-1"></canvas>
+        <div id="unity-loading-container">
+          <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+              <div id="unity-progress-bar-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-logo-title-footer"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">{{{ PRODUCT_NAME }}}</div>
+      </div>
+    </div>
+    <script>
+      let canvas = document.querySelector("#unity-canvas");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        fullscreenElementID: "unity-fullscreen-container",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+      };
+
+      // Every device fills the whole browser viewport (see TemplateData/style.css), so the WebGL
+      // render target always matches the real available screen space (scaled by devicePixelRatio,
+      // Unity's default). The stock template only did this for phones and gave desktop browsers a
+      // small fixed-size box instead, which rendered all the UI — including card text — at a much
+      // lower effective pixel density there than on a phone filling its real screen. That mismatch
+      // is what made text look sharp on a phone but blurry on a laptop/PC.
+#if BACKGROUND_FILENAME
+      canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";
+#endif
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        const loadingContainer = document.querySelector("#unity-loading-container");
+        const progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+        createUnityInstance(canvas, config, (progress) => {
+          if (progress < 1) {
+            loadingContainer.style.display = "block";
+            progressBarFull.style.width = 100 * progress + "%";
+          } else {
+            loadingContainer.style.display = "none";
+          }
+        }).then((unityInstance) => {
+          // iOS Safari has never supported the Fullscreen API for a plain page element (only <video>
+          // can go fullscreen there) - SetFullscreen() just silently does nothing on it, leaving the
+          // button looking broken. The game already fills the whole viewport regardless (see
+          // TemplateData/style.css), so the only thing "fullscreen" would add on iOS is hiding Safari's
+          // own address bar - "Add to Home Screen" is the standard iOS way to get that, so offer it
+          // instead of a dead button. Every other platform (including Android) keeps the real button.
+          var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+          document.querySelector("#unity-fullscreen-button").onclick = () => {
+            if (isIOS) {
+              unityShowBanner("iPhone/iPad can't go fullscreen from a web page. For a fullscreen game, "
+                + "tap Share, then \"Add to Home Screen\", and open it from there instead.", "warning");
+            } else {
+              unityInstance.SetFullscreen(1);
+            }
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

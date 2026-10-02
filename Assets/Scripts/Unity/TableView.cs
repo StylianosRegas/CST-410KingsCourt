@@ -16,13 +16,20 @@ namespace KingsCourt.UnityLayer
         public static readonly Color TraitorColor = new Color(.85f, .2f, .2f);
         public static readonly Color ChaosColor = new Color(.62f, .3f, .85f);
 
-        // Eight physical spots around the table: 0 = throne (head, left end), then clockwise.
+        /// <summary>World position of the discard pile, same (4.8, 0.4) used in BuildTable(). Exposed so the
+        /// UI layer can place an invisible hit area over it without duplicating the magic numbers.</summary>
+        public static readonly Vector2 DiscardPilePos = new Vector2(4.8f, 0.4f);
+
+        // Physical spots around the table: 0 = throne (head, left end), then clockwise. 8 and 9 are the
+        // two extra spots used only at 9/10 players, slotted into the top-right and bottom-right gaps so
+        // the clockwise order (and so RotateLeft's visual flow) stays sensible at every player count.
         private static readonly Vector2[] Slots =
         {
             new Vector2(-7.6f, 0.4f),
             new Vector2(-3.6f, 3.65f), new Vector2(0f, 3.65f), new Vector2(3.6f, 3.65f),
             new Vector2(7.6f, 0.4f),
             new Vector2(3.6f, -2.85f), new Vector2(0f, -2.85f), new Vector2(-3.6f, -2.85f),
+            new Vector2(7.0f, 2.6f), new Vector2(7.0f, -1.8f),
         };
 
         // Which slots are used at each player count (kept in clockwise order).
@@ -33,6 +40,8 @@ namespace KingsCourt.UnityLayer
             new[] { 0, 1, 3, 4, 5, 7 },
             new[] { 0, 1, 2, 3, 5, 6, 7 },
             new[] { 0, 1, 2, 3, 4, 5, 6, 7 },
+            new[] { 0, 1, 2, 3, 8, 4, 5, 6, 7 },
+            new[] { 0, 1, 2, 3, 8, 4, 9, 5, 6, 7 },
         };
 
         private sealed class PlayerVisual
@@ -166,7 +175,9 @@ namespace KingsCourt.UnityLayer
                 v.Pawn.enabled = !full;
                 v.Base.enabled = full;
                 v.Icon.enabled = full;
-                v.Badge.enabled = !full && p.IsYou && p.Role.HasValue;
+                // The badge shows a role only you privately know but isn't public yet: your own role, or (for
+                // traitors) your teammate's role via GameSnapshot's traitor-recognition exception.
+                v.Badge.enabled = !full && p.Role.HasValue;
                 if (p.Role.HasValue)
                 {
                     v.Icon.sprite = SpriteFactory.Icon(p.Role.Value);
@@ -188,8 +199,14 @@ namespace KingsCourt.UnityLayer
                 string roleLine = "";
                 if (full && p.Role.HasValue) roleLine = "\n" + p.Role.Value;
                 else if (p.IsYou && p.Role.HasValue) roleLine = "\n(you are " + p.Role.Value + ")";
+                else if (p.Role.HasValue) roleLine = "\n(" + p.Role.Value + ")";
                 v.Name.text = p.Name + (p.IsBot && !p.Name.StartsWith("Bot") ? " [bot]" : "") + roleLine;
-                v.Name.color = !p.Alive ? new Color(.6f, .6f, .6f) : (p.IsYou ? UiKit.Gold : Color.white);
+                // A known role's name is tinted by team (red for traitors) so a teammate stands out at a
+                // glance - covers both a public reveal and the private "you know your teammate" badge case.
+                v.Name.color = !p.Alive ? new Color(.6f, .6f, .6f)
+                    : p.IsYou ? UiKit.Gold
+                    : p.Role.HasValue ? Color.Lerp(team, Color.white, .3f)
+                    : Color.white;
                 v.Name.transform.localPosition = new Vector3(0, -1.0f, 0);
                 v.Tag.transform.localPosition = new Vector3(0, .8f, 0);
                 v.Tag.text = !p.Alive ? "" : isTb ? "THRONEBEARER" : (s.TrustedAdvisorId == p.Id ? "TRUSTED ADVISOR" : "");

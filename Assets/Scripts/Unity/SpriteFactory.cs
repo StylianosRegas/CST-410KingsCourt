@@ -147,6 +147,14 @@ namespace KingsCourt.UnityLayer
                         new Layer(gold, Disc(.5f, .86f, .06f)),
                         new Layer(gold, Disc(.9f, .76f, .06f)),
                     };
+                case Role.Prophet: // crystal ball on a stand
+                    return new[]
+                    {
+                        new Layer(new Color(.5f, .8f, .88f), Disc(.5f, .58f, .28f)),
+                        new Layer(new Color(.85f, .96f, .98f), Disc(.4f, .68f, .09f)),
+                        new Layer(goldDark, Poly(.32f, .28f, .68f, .28f, .6f, .38f, .4f, .38f)),
+                        new Layer(gold, Rect(.28f, .2f, .72f, .28f)),
+                    };
                 case Role.Beggar: // bowl with coins
                     return new[]
                     {
@@ -157,6 +165,32 @@ namespace KingsCourt.UnityLayer
                         new Layer(gold, Disc(.55f, .73f, .07f)),
                         new Layer(gold, Disc(.5f, .66f, .06f)),
                         new Layer(goldDark, Disc(.62f, .68f, .04f)),
+                    };
+                case Role.Reaper: // hooded skull with a scythe blade
+                    return new[]
+                    {
+                        new Layer(new Color(.9f, .9f, .86f), Disc(.5f, .58f, .22f)),
+                        new Layer(new Color(.08f, .08f, .1f), Disc(.41f, .6f, .055f)),
+                        new Layer(new Color(.08f, .08f, .1f), Disc(.59f, .6f, .055f)),
+                        new Layer(new Color(.08f, .08f, .1f), Poly(.44f, .46f, .56f, .46f, .5f, .4f)),
+                        new Layer(new Color(.15f, .14f, .18f), Poly(.5f, .9f, .66f, .5f, .5f, .58f, .34f, .5f)),
+                        new Layer(steel, Poly(.62f, .7f, .86f, .78f, .8f, .9f, .6f, .82f)),
+                        new Layer(new Color(.35f, .25f, .14f), Rect(.6f, .18f, .66f, .74f)),
+                    };
+                case Role.Lovers: // two interlocking hearts
+                    return new[]
+                    {
+                        new Layer(new Color(.86f, .18f, .32f), Heart(.38f, .5f, .3f)),
+                        new Layer(new Color(.95f, .55f, .62f), Heart(.62f, .5f, .3f)),
+                    };
+                case Role.Medium: // a pale spirit, communing with the dead
+                    return new[]
+                    {
+                        new Layer(new Color(.78f, .9f, .92f), Disc(.5f, .62f, .22f)),
+                        new Layer(new Color(.78f, .9f, .92f), Rect(.28f, .32f, .72f, .62f)),
+                        new Layer(new Color(.78f, .9f, .92f), Poly(.28f, .38f, .36f, .22f, .44f, .38f, .5f, .2f, .56f, .38f, .64f, .22f, .72f, .38f)),
+                        new Layer(new Color(.14f, .16f, .2f), Disc(.41f, .6f, .035f)),
+                        new Layer(new Color(.14f, .16f, .2f), Disc(.59f, .6f, .035f)),
                     };
             }
             return new Layer[0];
@@ -169,6 +203,15 @@ namespace KingsCourt.UnityLayer
         private static Shape Rect(float x0, float y0, float x1, float y1) { return (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1; }
         private static Shape Ellipse(float cx, float cy, float rx, float ry) { return (x, y) => { float a = (x - cx) / rx, b = (y - cy) / ry; return a * a + b * b <= 1f; }; }
         private static Shape HalfDisc(float cx, float cy, float r) { return (x, y) => y <= cy && (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r; }
+
+        private static Shape Heart(float cx, float cy, float size)
+        {
+            float r = size * 0.28f;
+            var lobeL = Disc(cx - r, cy + r * 0.15f, r);
+            var lobeR = Disc(cx + r, cy + r * 0.15f, r);
+            var point = Poly(cx - r * 1.9f, cy + r * 0.15f, cx + r * 1.9f, cy + r * 0.15f, cx, cy - size * 0.9f);
+            return (x, y) => lobeL(x, y) || lobeR(x, y) || point(x, y);
+        }
 
         private static Shape Poly(params float[] xy)
         {
@@ -196,6 +239,39 @@ namespace KingsCourt.UnityLayer
                 pts[i * 2 + 1] = cy + Mathf.Sin(a) * r;
             }
             return Poly(pts);
+        }
+
+        /// <summary>A scannable QR code for the given text (e.g. the join link). Cached by text so the
+        /// lobby doesn't regenerate it every refresh. Point-filtered (no blur) with the spec's 4-module
+        /// quiet zone, since real phone cameras need both to read it reliably.</summary>
+        public static Sprite QrCode(string text)
+        {
+            return Get("qr:" + text, () =>
+            {
+                bool[,] modules = QrEncoder.Encode(text);
+                int size = modules.GetLength(0);
+                const int quiet = 4;
+                const int pxPerModule = 6;
+                int px = (size + quiet * 2) * pxPerModule;
+                var tex = new Texture2D(px, px, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                var pixels = new Color[px * px];
+                for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+                for (int r = 0; r < size; r++)
+                {
+                    for (int c = 0; c < size; c++)
+                    {
+                        if (!modules[r, c]) continue;
+                        int px0 = (c + quiet) * pxPerModule;
+                        int py0 = (size - 1 - r + quiet) * pxPerModule; // texture row 0 is the bottom
+                        for (int dy = 0; dy < pxPerModule; dy++)
+                            for (int dx = 0; dx < pxPerModule; dx++)
+                                pixels[(py0 + dy) * px + (px0 + dx)] = Color.black;
+                    }
+                }
+                tex.SetPixels(pixels);
+                tex.Apply();
+                return Sprite.Create(tex, new Rect(0, 0, px, px), new Vector2(.5f, .5f), px);
+            });
         }
 
         // ------------------------------------------------------------ rasteriser

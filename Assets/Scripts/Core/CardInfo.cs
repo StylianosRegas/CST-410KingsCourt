@@ -35,6 +35,7 @@ namespace KingsCourt.Core
                 case ActionEffect.FaceUpNextRound:
                 case ActionEffect.EnactTwoNextRound:
                 case ActionEffect.AllAdviceToThronebearerNextRound:
+                case ActionEffect.BlindNextRound:
                     return CardCategory.NextRound;
                 default:
                     return CardCategory.Seats;
@@ -68,6 +69,7 @@ namespace KingsCourt.Core
                 case ActionEffect.FaceUpNextRound: return "Cards Up";
                 case ActionEffect.EnactTwoNextRound: return "Double Decree";
                 case ActionEffect.AllAdviceToThronebearerNextRound: return "Straight to the King";
+                case ActionEffect.BlindNextRound: return "Mead";
                 case ActionEffect.DieSwapWithThronebearer: return "Throne Roulette";
                 case ActionEffect.ChooseSwapSeat: return "Change Seats";
                 case ActionEffect.SwapSeatAndReveal: return "Swap and Expose";

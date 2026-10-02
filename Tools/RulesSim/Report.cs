@@ -39,8 +39,9 @@ internal static class Report
             }
         }
 
-        int total = games * 4;
-        Console.WriteLine("Simulated " + total + " games (" + games + " each at 5, 6, 7 and 8 players, random-choice bots)");
+        int brackets = Game.MaxPlayers - Game.MinPlayers + 1;
+        int total = games * brackets;
+        Console.WriteLine("Simulated " + total + " games (" + games + " each at " + Game.MinPlayers + " to " + Game.MaxPlayers + " players, random-choice bots)");
         Console.WriteLine();
         Console.WriteLine("TEAM RESULTS");
         foreach (var w in winners.OrderByDescending(k => k.Value))

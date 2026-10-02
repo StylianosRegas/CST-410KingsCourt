@@ -41,8 +41,23 @@ namespace KingsCourt.Core
         public List<string> Log = new List<string>();
         public GameResult Result;
         public List<int> WinnerIds = new List<int>();
+        /// <summary>Mead's effect: nobody may see any card's face this round, including their own hand.</summary>
+        public bool RoundBlind;
+        /// <summary>The most recently enacted card (public once enacted) and a sequence number that bumps
+        /// each time, so the UI can pop up a "new" one without re-showing a stale one every snapshot.</summary>
+        public ActionCard LastEnacted;
+        public int EnactedSeq;
+        /// <summary>The last 3 enacted cards, oldest first - public knowledge, no player attribution.</summary>
+        public List<ActionCard> EnactedHistory = new List<ActionCard>();
+        /// <summary>Show Your Hand's reveal - whose hand and what was in it, public to everyone.</summary>
+        public string ShownHandOwner;
+        public List<ActionCard> ShownHandCards = new List<ActionCard>();
+        public int ShownHandSeq;
 
         public PlayerInfo Find(int id) { return Players.FirstOrDefault(p => p.Id == id); }
+
+        /// <summary>Prince, Nobleman and the Prophet always recognize each other, regardless of reveal state.</summary>
+        private static bool IsTraitorTeam(Role role) { return role == Role.Prince || role == Role.Nobleman || role == Role.Prophet; }
 
         /// <param name="seats">Human/bot seats (optional), used for bot flags and pending decisions.</param>
         /// <param name="revealAll">Spectator/debug: show every role.</param>
@@ -57,14 +72,25 @@ namespace KingsCourt.Core
                 SeatCount = g.SeatCount,
                 TrustedAdvisorId = g.TrustedAdvisorId,
                 Result = g.Result,
+                RoundBlind = g.RoundBlind,
+                LastEnacted = g.LastEnacted,
+                EnactedSeq = g.EnactedSeq,
+                EnactedHistory = new List<ActionCard>(g.EnactedHistory),
+                ShownHandOwner = g.ShownHandOwner,
+                ShownHandCards = new List<ActionCard>(g.ShownHandCards),
+                ShownHandSeq = g.ShownHandSeq,
             };
             var tb = g.Thronebearer;
             s.ThronebearerId = tb != null ? tb.Id : -1;
 
+            var viewer = g.Players.FirstOrDefault(p => p.Id == viewerId);
+            bool viewerIsTraitor = viewer != null && IsTraitorTeam(viewer.Role);
+
             foreach (var p in g.Players)
             {
                 bool mine = p.Id == viewerId;
-                bool visible = revealAll || mine || p.Revealed;
+                bool traitorTeammate = viewerIsTraitor && IsTraitorTeam(p.Role);
+                bool visible = revealAll || mine || p.Revealed || traitorTeammate;
                 s.Players.Add(new PlayerInfo
                 {
                     Id = p.Id,
