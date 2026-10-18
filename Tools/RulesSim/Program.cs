@@ -8,6 +8,14 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "scenarios") return ScenarioTest.Run(args.Length > 1 ? int.Parse(args[1]) : 500);
+        if (args.Length > 0 && args[0] == "phasetrace")
+        {
+            int tracePlayers = args.Length > 1 ? int.Parse(args[1]) : 5;
+            int traceRounds = args.Length > 2 ? int.Parse(args[2]) : 2;
+            int traceSeed = args.Length > 3 ? int.Parse(args[3]) : 1;
+            return PhaseTrace.Run(tracePlayers, traceRounds, traceSeed);
+        }
         if (args.Length > 0 && args[0] == "legality") return LegalityTests.Run(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "report") return Report.Run(args.Length > 1 ? int.Parse(args[1]) : 1000);
         if (args.Length > 0 && args[0] == "deal")

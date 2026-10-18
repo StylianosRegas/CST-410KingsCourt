@@ -35,6 +35,7 @@ namespace KingsCourt.UnityLayer
         private GameScreen game;
         private HelpPanel help;
         private SettingsPanel settings;
+        private ScenarioPicker scenarioPicker;
         private IPlayerSession session;
         private int seedCounter;
         private string offlineCode = "";
@@ -61,6 +62,7 @@ namespace KingsCourt.UnityLayer
             game = new GameScreen(canvas.transform, this);
             help = new HelpPanel(canvas.transform);
             settings = new SettingsPanel(canvas.transform, () => LobbyChanged());
+            scenarioPicker = new ScenarioPicker(canvas.transform, this);
             ShowStart();
 
             // A shared link such as http://192.168.1.5:8000/?join=ABCD joins straight away.
@@ -259,6 +261,19 @@ namespace KingsCourt.UnityLayer
         }
         public void ShowHelp() { help.Show(); }
         public void ShowSettings() { settings.Show(); }
+        public void ShowScenarioPicker() { scenarioPicker.Show(); }
+
+        /// <summary>Build 5: starts a local, offline, bot-filled game straight from one ScenarioConfig -
+        /// no network lobby, since a scenario run is about proving the configuration loads and plays, the
+        /// same shape as HOST GAME's offline fallback but with every field driven by the chosen asset.</summary>
+        public void StartScenario(ScenarioConfig scenario)
+        {
+            scenarioPicker.Hide();
+            DisposeNet();
+            seedCounter++;
+            offlineCode = GameSession.NewCode(seedCounter);
+            BeginWith(new GameSession(scenario.PlayerCount, 0, seedCounter, pacer, offlineCode, scenario));
+        }
 
         // ------------------------------------------------------------------ lobby contents
 

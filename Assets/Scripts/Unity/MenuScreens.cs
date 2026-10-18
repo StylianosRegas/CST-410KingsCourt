@@ -35,6 +35,7 @@ namespace KingsCourt.UnityLayer
             UiKit.Place((RectTransform)stack.transform, new Vector2(.5f, .5f), new Vector2(.5f, 1), new Vector2(0, -60), new Vector2(520, 520));
             UiKit.MakeButton(stack.transform, "HOST GAME", UiKit.Button, () => c.HostGame(), 40, new Vector2(520, 90));
             UiKit.MakeButton(stack.transform, "JOIN GAME", UiKit.ButtonAlt, () => pad.Show(), 40, new Vector2(520, 90));
+            UiKit.MakeButton(stack.transform, "SCENARIOS", UiKit.ButtonAlt, () => c.ShowScenarioPicker(), 40, new Vector2(520, 90));
             UiKit.MakeButton(stack.transform, "HOW TO PLAY", UiKit.ButtonAlt, () => c.ShowHelp(), 40, new Vector2(520, 90));
             UiKit.MakeButton(stack.transform, "SETTINGS", UiKit.ButtonAlt, () => c.ShowSettings(), 40, new Vector2(520, 90));
 

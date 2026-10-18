@@ -19,9 +19,18 @@ namespace KingsCourt.Core
     public sealed class Game
     {
         public const int ThroneSeat = 0;
-        public const int HandSize = 3;
+        public const int DefaultHandSize = 3;
         public const int MinPlayers = 5;
         public const int MaxPlayers = 10;
+        /// <summary>Starting/refill hand size. Scenario-configurable (Build 5); defaults to the standard 3.</summary>
+        public readonly int HandSize;
+        /// <summary>Scenario-configurable (Build 5): when false, step 5 of the round ("everyone draws back
+        /// what they played") is skipped entirely - hands only ever shrink, the Poisoned Crown shape.</summary>
+        public readonly bool RefillAtEndOfTurn;
+        /// <summary>Scenario-configurable (Build 5) non-standard end trigger, checked once per round after
+        /// the standard checks. Returning a Winner ends the game with that result and the given reason.</summary>
+        public Func<Game, Winner?> ScenarioEndCheck;
+        public string ScenarioEndReason = "The scenario's end condition was met.";
         /// <summary>The Lovers win instantly once alive-count drops to this many, provided both are among them.</summary>
         public const int LoversWinAliveThreshold = 5;
 
@@ -80,13 +89,16 @@ namespace KingsCourt.Core
         /// dying again, permanently. Decremented at the end of each round they get to actually play.</summary>
         private readonly Dictionary<int, int> borrowedLifeRoundsLeft = new Dictionary<int, int>();
 
-        public Game(int playerCount, int seed, IList<IPlayerAgent> playerAgents)
+        public Game(int playerCount, int seed, IList<IPlayerAgent> playerAgents, int handSize = DefaultHandSize, bool refillAtEndOfTurn = true)
         {
             if (playerCount < MinPlayers || playerCount > MaxPlayers)
                 throw new ArgumentOutOfRangeException("playerCount", "King's Court is for 5 to 10 players.");
             if (playerAgents == null || playerAgents.Count != playerCount)
                 throw new ArgumentException("One agent per player is required.");
+            if (handSize < 1) throw new ArgumentOutOfRangeException("handSize", "A hand size below 1 leaves nobody anything to play.");
 
+            HandSize = handSize;
+            RefillAtEndOfTurn = refillAtEndOfTurn;
             rng = new Random(seed);
             agents = playerAgents.ToArray();
 
@@ -434,11 +446,23 @@ namespace KingsCourt.Core
             // 5. Everyone draws back as many cards as they played this round (not a flat refill to 3 -
             //    hand sizes can now drift up or down from card effects instead of always snapping back).
             //    The thronebearer and trusted advisor played no card face-down, so they draw none here.
-            var playCounts = played.Where(c => c.OwnerId >= 0).GroupBy(c => c.OwnerId).ToDictionary(g => g.Key, g => g.Count());
-            foreach (var p in AlivePlayers)
+            //    Scenario-configurable (Build 5): RefillAtEndOfTurn=false skips this entirely (Poisoned Crown).
+            if (RefillAtEndOfTurn)
             {
-                int n;
-                if (playCounts.TryGetValue(p.Id, out n) && n > 0) DrawInto(p, n);
+                var playCounts = played.Where(c => c.OwnerId >= 0).GroupBy(c => c.OwnerId).ToDictionary(g => g.Key, g => g.Count());
+                foreach (var p in AlivePlayers)
+                {
+                    int n;
+                    if (playCounts.TryGetValue(p.Id, out n) && n > 0) DrawInto(p, n);
+                }
+            }
+
+            // Scenario end check (Build 5): a non-standard trigger (deck empty, every hand empty, ...)
+            // layered on top of the standard win conditions checked elsewhere in the round.
+            if (Result == null && ScenarioEndCheck != null)
+            {
+                var scenarioWinner = ScenarioEndCheck(this);
+                if (scenarioWinner.HasValue) { End(scenarioWinner.Value, ScenarioEndReason); return; }
             }
 
             // A player the Medium already brought back finishes one of their 2 borrowed rounds here. Done

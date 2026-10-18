@@ -161,9 +161,12 @@ namespace KingsCourt.Core
         private Task<int> Open(Decision d)
         {
             waiting = new TaskCompletionSource<int>();
+            var task = waiting.Task; // captured before the event fires: a synchronous reentrant Submit()
+                                      // from inside DecisionOpened (e.g. a driver answering its own prompt)
+                                      // already nulls out the `waiting` field by the time this method resumes.
             Pending = d;
             if (DecisionOpened != null) DecisionOpened(this, d);
-            return waiting.Task;
+            return task;
         }
 
         // ---- player side

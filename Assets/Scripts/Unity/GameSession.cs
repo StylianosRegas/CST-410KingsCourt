@@ -84,16 +84,30 @@ namespace KingsCourt.UnityLayer
         private readonly Pacer pacer;
         private bool running;
 
-        public GameSession(int players, int localPlayerId, int seed, Pacer pacer, string joinCode = null)
+        /// <summary>Build 5: when a scenario is given, it decides the player count, hand size, refill
+        /// behaviour and any extra end condition - the `players` argument is ignored in favour of
+        /// scenario.PlayerCount, same as the brief asks ("nothing scenario-specific is hardcoded in a
+        /// scene or a script").</summary>
+        public GameSession(int players, int localPlayerId, int seed, Pacer pacer, string joinCode = null, ScenarioConfig scenario = null)
         {
             this.pacer = pacer;
             LocalPlayerId = localPlayerId;
             JoinCode = joinCode ?? NewCode(seed);
+            int count = scenario != null ? scenario.PlayerCount : players;
             Seats = new List<SeatAgent>();
-            for (int i = 0; i < players; i++) Seats.Add(new SeatAgent(i, i != localPlayerId, seed * 31 + i));
-            Game = new Game(players, seed, Seats.Cast<IPlayerAgent>().ToList());
+            for (int i = 0; i < count; i++) Seats.Add(new SeatAgent(i, i != localPlayerId, seed * 31 + i));
+            Game = scenario != null ? scenario.Start(Seats.Cast<IPlayerAgent>().ToList(), seed) : new Game(count, seed, Seats.Cast<IPlayerAgent>().ToList());
             Game.Players[localPlayerId].Rename(GameSettings.PlayerName);
-            for (int i = 0; i < players; i++) if (i != localPlayerId) Game.Players[i].Rename("Bot " + (i + 1));
+            for (int i = 0; i < count; i++) if (i != localPlayerId) Game.Players[i].Rename("Bot " + (i + 1));
+            // Scenario-specific starting state that isn't a round-check condition (Marked Court: Queen and
+            // Knight start already revealed) - applied once, right after the deal, not as a per-round rule.
+            if (scenario != null && scenario.Id == "marked-court")
+            {
+                var queen = Game.Players.FirstOrDefault(p => p.Role == Role.Queen);
+                var knight = Game.Players.FirstOrDefault(p => p.Role == Role.Knight);
+                if (queen != null) Game.AdminReveal(queen.Id);
+                if (knight != null) Game.AdminReveal(knight.Id);
+            }
             Game.Beat = pacer.Wait;
             Game.Changed += Raise;
             Game.Logged += _ => Raise();
