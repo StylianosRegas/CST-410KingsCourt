@@ -13,16 +13,25 @@ namespace KingsCourt.UnityLayer
     /// </summary>
     public sealed class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
+        // Build 6: proportions measured from the physical poker-size card (63 x 88 mm, see Downloads'
+        // "Card Anatomy Workshop" template) - 196px wide keeps the existing hand layout untouched, height
+        // follows the real 63:88 aspect ratio instead of the old, uncalibrated 196x280.
         public const float Width = 196f;
-        public const float Height = 280f;
+        public const float Height = 274f;  // 196 * (88/63)
+
+        // Zone heights in px. The 3mm card margin is already the Body box's own 6px inset (see Build()),
+        // so these five zones are scaled to fill exactly what's left inside it: Height-12=262px for the
+        // template's 12+34+6+25+5=82mm of header+art+type+effect+footer, i.e. 262/82 = 3.195 px/mm.
+        private const float HeaderH = 38f, ArtH = 109f, TypeH = 19f, EffectH = 80f, FooterH = 16f;
+        private const float CostW = 42f;
 
         public ActionCard Card { get; private set; }
         public int Index;
         public event Action<CardView> Clicked;
 
         [SerializeField] private RectTransform visual;
-        [SerializeField] private Image glow, border, body, header;
-        [SerializeField] private Text title, category, effect;
+        [SerializeField] private Image glow, border, body, header, artBg, artIcon;
+        [SerializeField] private Text nameLabel, costLabel, typeLabel, effectLabel, footerLabel;
         [SerializeField] private Image backPattern;
         private bool selected, playable = true, hover, faceDown;
 
@@ -86,24 +95,52 @@ namespace KingsCourt.UnityLayer
             body = bd.GetComponent<Image>();
             body.raycastTarget = false;
 
+            // Zone 1+2: header band (12mm) - name on the left, cost on the right, same row.
             var h = UiKit.Box(bd, "Header", Color.gray);
             h.anchorMin = new Vector2(0, 1); h.anchorMax = new Vector2(1, 1); h.pivot = new Vector2(.5f, 1);
-            h.sizeDelta = new Vector2(0, 58);
+            h.anchoredPosition = new Vector2(0, -0f); h.sizeDelta = new Vector2(0, HeaderH);
             header = h.GetComponent<Image>();
             header.raycastTarget = false;
-            title = UiKit.Label(h, "", 21, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
-            UiKit.Stretch((RectTransform)title.transform, 4, 2, 4, 2);
-            title.resizeTextForBestFit = true; title.resizeTextMinSize = 13; title.resizeTextMaxSize = 21;
+            nameLabel = UiKit.Label(h, "", 18, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
+            UiKit.Stretch((RectTransform)nameLabel.transform, 6, 2, CostW + 4, 2);
+            nameLabel.resizeTextForBestFit = true; nameLabel.resizeTextMinSize = 11; nameLabel.resizeTextMaxSize = 18;
+            costLabel = UiKit.Label(h, "", 14, new Color(1f, 1f, 1f, .85f), TextAnchor.MiddleRight, FontStyle.Bold);
+            UiKit.Place((RectTransform)costLabel.transform, new Vector2(1, .5f), new Vector2(1, .5f), new Vector2(-6, 0), new Vector2(CostW, HeaderH - 8));
 
-            category = UiKit.Label(bd, "", 12, new Color(.35f, .3f, .3f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            var crt = (RectTransform)category.transform;
-            crt.anchorMin = new Vector2(0, 1); crt.anchorMax = new Vector2(1, 1); crt.pivot = new Vector2(.5f, 1);
-            crt.anchoredPosition = new Vector2(0, -62); crt.sizeDelta = new Vector2(0, 18);
+            // Zone 3: art window (34mm) - the card's category icon, same icon everywhere that category appears.
+            var art = UiKit.Box(bd, "Art", new Color(0, 0, 0, .06f));
+            art.anchorMin = new Vector2(0, 1); art.anchorMax = new Vector2(1, 1); art.pivot = new Vector2(.5f, 1);
+            art.anchoredPosition = new Vector2(0, -(HeaderH)); art.sizeDelta = new Vector2(0, ArtH);
+            artBg = art.GetComponent<Image>();
+            artBg.raycastTarget = false;
+            var artIconRt = UiKit.Rect(art, "Icon");
+            artIconRt.anchorMin = artIconRt.anchorMax = new Vector2(.5f, .5f);
+            artIconRt.sizeDelta = new Vector2(ArtH * .62f, ArtH * .62f);
+            artIcon = artIconRt.gameObject.AddComponent<Image>();
+            artIcon.preserveAspect = true;
+            artIcon.raycastTarget = false;
 
-            effect = UiKit.Label(bd, "", 15, UiKit.Ink, TextAnchor.UpperCenter);
-            var ert = (RectTransform)effect.transform;
-            UiKit.Stretch(ert, 10, 8, 10, 84);
-            effect.resizeTextForBestFit = true; effect.resizeTextMinSize = 10; effect.resizeTextMaxSize = 17;
+            // Zone 4: type line (6mm).
+            typeLabel = UiKit.Label(bd, "", 11, new Color(.4f, .36f, .33f), TextAnchor.MiddleCenter, FontStyle.Bold);
+            var trt = (RectTransform)typeLabel.transform;
+            trt.anchorMin = new Vector2(0, 1); trt.anchorMax = new Vector2(1, 1); trt.pivot = new Vector2(.5f, 1);
+            trt.anchoredPosition = new Vector2(0, -(HeaderH + ArtH)); trt.sizeDelta = new Vector2(0, TypeH);
+
+            // Zone 5: effect box (25mm).
+            effectLabel = UiKit.Label(bd, "", 14, UiKit.Ink, TextAnchor.UpperCenter);
+            var ert = (RectTransform)effectLabel.transform;
+            ert.anchorMin = new Vector2(0, 1); ert.anchorMax = new Vector2(1, 1); ert.pivot = new Vector2(.5f, 1);
+            ert.anchoredPosition = new Vector2(0, -(HeaderH + ArtH + TypeH)); ert.sizeDelta = new Vector2(0, EffectH);
+            UiKit.Stretch(ert, 10, 0, 10, 0);
+            effectLabel.resizeTextForBestFit = true; effectLabel.resizeTextMinSize = 9; effectLabel.resizeTextMaxSize = 16;
+
+            // Zone 6: footer (5mm) - the card's id, so a physical salvaged card numbered to match can be
+            // paired with it the same way Card Faces pairs a numbered card to a Padlet post.
+            footerLabel = UiKit.Label(bd, "", 10, new Color(.55f, .5f, .46f), TextAnchor.MiddleRight);
+            var frt = (RectTransform)footerLabel.transform;
+            frt.anchorMin = new Vector2(0, 1); frt.anchorMax = new Vector2(1, 1); frt.pivot = new Vector2(.5f, 1);
+            frt.anchoredPosition = new Vector2(0, -(HeaderH + ArtH + TypeH + EffectH)); frt.sizeDelta = new Vector2(0, FooterH);
+            UiKit.Stretch(frt, 8, 1, 8, 1);
 
             var bp = UiKit.Box(visual, "BackPattern", new Color(.85f, .7f, .25f));
             bp.sizeDelta = new Vector2(62, 62);
@@ -120,15 +157,23 @@ namespace KingsCourt.UnityLayer
             faceDown = showBack || card == null;
             body.color = faceDown ? new Color(.55f, .12f, .16f) : UiKit.Paper;
             header.gameObject.SetActive(!faceDown);
-            category.gameObject.SetActive(!faceDown);
-            effect.gameObject.SetActive(!faceDown);
+            artBg.gameObject.SetActive(!faceDown);
+            typeLabel.gameObject.SetActive(!faceDown);
+            effectLabel.gameObject.SetActive(!faceDown);
+            footerLabel.gameObject.SetActive(!faceDown);
             backPattern.enabled = faceDown;
             if (faceDown) return;
             var cat = CardInfo.Category(card.Effect);
-            header.color = CategoryColor(cat);
-            title.text = CardInfo.Title(card.Effect);
-            category.text = cat.ToString().ToUpperInvariant();
-            effect.text = card.Text;
+            var catColor = CategoryColor(cat);
+            header.color = catColor;
+            nameLabel.text = CardInfo.Title(card.Effect);
+            costLabel.text = "1"; // every action card costs the same: your one card-play slot for the round
+            artBg.color = Color.Lerp(catColor, UiKit.Paper, .82f);
+            artIcon.sprite = SpriteFactory.CategoryIcon(cat);
+            artIcon.color = catColor;
+            typeLabel.text = "ACTION · " + cat.ToString().ToUpperInvariant();
+            effectLabel.text = card.Text;
+            footerLabel.text = "#" + card.Id;
         }
 
         public void SetState(bool isPlayable, bool isSelected)

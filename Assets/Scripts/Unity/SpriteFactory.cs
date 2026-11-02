@@ -196,6 +196,67 @@ namespace KingsCourt.UnityLayer
             return new Layer[0];
         }
 
+        // ------------------------------------------------------------ card art window (Build 6: one icon per CardCategory)
+
+        /// <summary>Build 6's art window: a simple procedural icon per CardCategory, same drawing approach as
+        /// the role icons above - no imported art, matching Assets/Downloads's Card Anatomy Workshop rule that
+        /// every category distinction must also be a shape, not just a colour.</summary>
+        public static Sprite CategoryIcon(CardCategory c)
+        {
+            return Get("cat_" + c, () => Draw(Size, CategoryIconLayers(c), Size));
+        }
+
+        private static Layer[] CategoryIconLayers(CardCategory c)
+        {
+            var ink = Color.white;
+            switch (c)
+            {
+                case CardCategory.Execute: // X
+                    return new[]
+                    {
+                        new Layer(ink, Bar(.24f, .76f, .76f, .24f, .07f)),
+                        new Layer(ink, Bar(.24f, .24f, .76f, .76f, .07f)),
+                    };
+                case CardCategory.Reveal: // eye
+                    return new[]
+                    {
+                        new Layer(ink, (x, y) => Disc(.32f, .5f, .34f)(x, y) && Disc(.68f, .5f, .34f)(x, y)),
+                        new Layer(new Color(.1f, .09f, .09f), Disc(.5f, .5f, .1f)),
+                    };
+                case CardCategory.Cards: // stack of two cards
+                    return new[]
+                    {
+                        new Layer(new Color(1, 1, 1, .55f), Rect(.42f, .18f, .86f, .72f)),
+                        new Layer(ink, Rect(.14f, .28f, .58f, .82f)),
+                    };
+                case CardCategory.NextRound: // clock
+                    return new[]
+                    {
+                        new Layer(ink, Annulus(.5f, .5f, .36f, .27f)),
+                        new Layer(ink, Bar(.5f, .5f, .5f, .74f, .045f)),
+                        new Layer(ink, Bar(.5f, .5f, .67f, .5f, .045f)),
+                    };
+                default: // Seats: swap arrows
+                    return new[]
+                    {
+                        new Layer(ink, Bar(.18f, .36f, .68f, .36f, .05f)),
+                        new Layer(ink, Poly(.68f, .22f, .68f, .5f, .86f, .36f)),
+                        new Layer(ink, Bar(.32f, .64f, .82f, .64f, .05f)),
+                        new Layer(ink, Poly(.32f, .5f, .32f, .78f, .14f, .64f)),
+                    };
+            }
+        }
+
+        /// <summary>A straight bar from (x0,y0) to (x1,y1), half-width hw - the one primitive the shapes
+        /// above needed that Poly/Rect/Disc didn't already give us (a rotated rectangle).</summary>
+        private static Shape Bar(float x0, float y0, float x1, float y1, float hw)
+        {
+            float dx = x1 - x0, dy = y1 - y0;
+            float len = Mathf.Sqrt(dx * dx + dy * dy);
+            float nx = -dy / len * hw, ny = dx / len * hw;
+            return Poly(x0 + nx, y0 + ny, x1 + nx, y1 + ny, x1 - nx, y1 - ny, x0 - nx, y0 - ny);
+        }
+
         // ------------------------------------------------------------ shape helpers (unit square, y up)
 
         private static Shape Disc(float cx, float cy, float r) { return (x, y) => (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r; }
