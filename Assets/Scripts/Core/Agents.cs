@@ -177,11 +177,13 @@ namespace KingsCourt.Core
             var d = Pending;
             if (d == null)
             {
-                if (IsBot) return SubmitResult.Reject("A bot is playing this seat.");
-                return SubmitResult.Reject(playedThisRound ? "You already played your card this round." : "It isn't your turn.");
+                if (IsBot) return SubmitResult.Reject("[" + Rules.NoBotOverride + "] A bot is playing this seat.");
+                return SubmitResult.Reject(playedThisRound
+                    ? "[" + Rules.OneCardPerRound + "] You already played your card this round."
+                    : "[" + Rules.TurnOrder + "] It isn't your turn.");
             }
-            if (decisionId != d.Id) return SubmitResult.Reject("That choice is no longer open.");
-            if (index < 0 || index >= d.OptionCount) return SubmitResult.Reject("That isn't a valid option.");
+            if (decisionId != d.Id) return SubmitResult.Reject("[" + Rules.TurnOrder + "] That choice is no longer open.");
+            if (index < 0 || index >= d.OptionCount) return SubmitResult.Reject("[" + Rules.ValidOption + "] That isn't a valid option.");
 
             if (d.Kind == ChoiceKind.PlayCard) playedThisRound = true;
             Close();

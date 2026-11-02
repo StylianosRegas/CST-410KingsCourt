@@ -8,6 +8,7 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "rules") return RulesTest.Run();
         if (args.Length > 0 && args[0] == "scenarios") return ScenarioTest.Run(args.Length > 1 ? int.Parse(args[1]) : 500);
         if (args.Length > 0 && args[0] == "phasetrace")
         {
