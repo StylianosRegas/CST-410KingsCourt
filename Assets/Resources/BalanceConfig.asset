@@ -31,7 +31,7 @@ MonoBehaviour:
     EnactedHistoryShown: 3
     MinPlayersAlive: 3
     MaxRounds: 200
-    PrinceThroneRoundsToWin: 4
+    PrinceThroneRoundsToWin: 3
     LoversWinAliveThreshold: 5
     ElderCardsRevealed: 2
     ElderCardsHidden: 1

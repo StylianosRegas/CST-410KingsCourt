@@ -55,7 +55,7 @@ internal static class TuneDemo
         return 0;
     }
 
-    private static string FindAsset()
+    public static string FindAsset()
     {
         string dir = AppContext.BaseDirectory;
         for (int i = 0; i < 8 && dir != null; i++)
@@ -69,7 +69,7 @@ internal static class TuneDemo
 
     /// <summary>Reads the scalar fields under "Values:" in the asset's YAML into a BalanceConfig. The per-card
     /// DeckCounts list keeps the factory values; it is not tuned in this demo.</summary>
-    private static BalanceConfig LoadFromAsset(string path)
+    public static BalanceConfig LoadFromAsset(string path)
     {
         var cfg = BalanceConfig.Factory();
         bool inValues = false;

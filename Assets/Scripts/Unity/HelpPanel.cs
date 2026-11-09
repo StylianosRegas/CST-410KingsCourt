@@ -81,18 +81,27 @@ namespace KingsCourt.UnityLayer
         public void ShowRound()
         {
             Clear();
+            var b = BalanceConfig.Current;
             Paragraph("The goal",
                 "Loyalists (blue) protect the King. They win when both Traitors, the Prince and the Nobleman, have been executed.\n" +
-                "Traitors (red) win if the Prince sits on the throne for 3 rounds in a row.\n" +
+                "Traitors (red) win if the Prince sits on the throne for " + b.PrinceThroneRoundsToWin + " rounds in a row.\n" +
                 "Chaos roles (purple) play for themselves. The Jester wins only by being executed. The Beggar counts as a Loyalist until he is revealed, then he joins the Traitors.");
             Paragraph("Every round",
                 "1.  The thronebearer (whoever sits on the throne) names a Trusted Advisor.\n" +
                 "2.  Every other advisor plays one action card face down, all at the same time. The Trusted Advisor plays no card.\n" +
-                "3.  The Trusted Advisor looks at every card played and passes two of them to the King. The rest are discarded.\n" +
-                "4.  The thronebearer picks one of those two and it happens. Hands then refill to 3 cards.");
+                "3.  The Trusted Advisor looks at every card played and passes " + b.CardsKept + " of them to the King. The rest are discarded.\n" +
+                "4.  The thronebearer picks " + b.CardsEnacted + " of those and it happens. Everyone who played cards then draws back as many as they played, so hands return to " + b.HandSize + ".");
+            // Build 8 (table change: Balance Surgery Nov 3, Operation 1, Rules Overhead): the spots the table
+            // found people got wrong are now said out loud instead of implied.
+            Paragraph("Things people forget",
+                "The Trusted Advisor plays nothing. Their own hand never counts at the filter, even if they are the Jester or the Elder.\n" +
+                "The thronebearer plays nothing. They never pass a card to the Trusted Advisor.\n" +
+                "Refill is draw-back, not a flat \"draw a card\": you draw as many cards as you played.\n" +
+                "If fewer than " + b.FilterChoices + " cards reach the Trusted Advisor, the top card of the draw pile is added until there are " + b.FilterChoices + ".\n" +
+                "The same player cannot be Trusted Advisor two rounds in a row, unless a card names them.");
             Paragraph("Secret roles",
                 "Your role is hidden until an action card reveals it. Revealed players get their role piece on the table. " +
-                "A role's ability can only be used once it is revealed (the Elder's and the Martyr's can be used while still hidden). The King is always revealed from the start, but is otherwise just another Loyalist - he can be executed like anyone else.");
+                "A role's ability can only be used once it is revealed (the Medium's can be used while still hidden). The King is always revealed from the start, but is otherwise just another Loyalist - he can be executed like anyone else.");
             Paragraph("Dice and the deck",
                 "\"Roll the die\" cards roll one face per seat. The seat that comes up is affected; an empty seat does nothing. " +
                 "When the deck runs out, the discard pile is shuffled back in.");

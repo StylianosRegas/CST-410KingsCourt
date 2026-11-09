@@ -34,6 +34,9 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        // The simulator plays by the same balance values as the game: whatever the Unity asset holds.
+        var assetPath = TuneDemo.FindAsset();
+        if (assetPath != null) BalanceConfig.Current = TuneDemo.LoadFromAsset(assetPath);
         if (args.Length > 0 && args[0] == "rules") return RulesTest.Run();
         if (args.Length > 0 && args[0] == "scenarios") return ScenarioTest.Run(args.Length > 1 ? int.Parse(args[1]) : 500);
         if (args.Length > 0 && args[0] == "phasetrace")
