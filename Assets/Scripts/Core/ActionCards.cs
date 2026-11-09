@@ -56,8 +56,8 @@ namespace KingsCourt.Core
     }
 
     /// <summary>
-    /// Source of truth: "Action Card Index.docx" plus cards added after playtesting. Duplicate cells in
-    /// the original index were merged into one entry with the summed count; (xN) markers are honoured.
+    /// Source of truth: "Action Card Index.docx" plus cards added after playtesting. Build 8: this list says
+    /// what each card IS (effect and text); how many copies of it are in the deck lives in BalanceConfig.DeckCounts.
     /// The original index totalled 43 cards (the GDD said 50); "Mead" (x2) was added 2026-09-29 after
     /// playtesting feedback, bringing the deck to 45.
     /// </summary>
@@ -67,64 +67,68 @@ namespace KingsCourt.Core
         {
             public ActionEffect Effect;
             public string Text;
-            public int Count;
-            public Entry(ActionEffect e, string t, int c) { Effect = e; Text = t; Count = c; }
+            public Entry(ActionEffect e, string t) { Effect = e; Text = t; }
         }
 
         public static readonly Entry[] Entries =
         {
-            new Entry(ActionEffect.ExecuteUnrevealed, "Execute an unrevealed player", 1),
-            new Entry(ActionEffect.ExecuteUnrevealedHidden, "Execute an unrevealed player. Do not reveal their loyalty card", 1),
-            new Entry(ActionEffect.ExecuteAdvisor, "Execute an advisor", 2),
-            new Entry(ActionEffect.DieExecute, "Roll the die, the player in that seat is executed", 1),
-            new Entry(ActionEffect.DieRevealOrExecute, "Roll the die: if it lands on an unrevealed advisor, reveal them; if on a revealed advisor, execute them", 2),
-            new Entry(ActionEffect.MostCardsExecuted, "The advisor with the most cards in hand is executed (tie: nothing happens)", 1),
+            new Entry(ActionEffect.ExecuteUnrevealed, "Execute an unrevealed player"),
+            new Entry(ActionEffect.ExecuteUnrevealedHidden, "Execute an unrevealed player. Do not reveal their loyalty card"),
+            new Entry(ActionEffect.ExecuteAdvisor, "Execute an advisor"),
+            new Entry(ActionEffect.DieExecute, "Roll the die, the player in that seat is executed"),
+            new Entry(ActionEffect.DieRevealOrExecute, "Roll the die: if it lands on an unrevealed advisor, reveal them; if on a revealed advisor, execute them"),
+            new Entry(ActionEffect.MostCardsExecuted, "The advisor with the most cards in hand is executed (tie: nothing happens)"),
 
-            new Entry(ActionEffect.ForceReveal, "The thronebearer forces an advisor to reveal their loyalty card", 1),
-            new Entry(ActionEffect.TrustedAdvisorForcesReveal, "The trusted advisor forces another advisor to reveal themselves", 1),
-            new Entry(ActionEffect.LeastCardsReveals, "The advisor with the fewest cards reveals themselves (tie or already revealed: nothing happens)", 1),
-            new Entry(ActionEffect.FaceUpNextRoundAndForceReveal, "All advisors play their cards face up next round; the thronebearer forces an advisor to reveal their loyalty card", 1),
+            new Entry(ActionEffect.ForceReveal, "The thronebearer forces an advisor to reveal their loyalty card"),
+            new Entry(ActionEffect.TrustedAdvisorForcesReveal, "The trusted advisor forces another advisor to reveal themselves"),
+            new Entry(ActionEffect.LeastCardsReveals, "The advisor with the fewest cards reveals themselves (tie or already revealed: nothing happens)"),
+            new Entry(ActionEffect.FaceUpNextRoundAndForceReveal, "All advisors play their cards face up next round; the thronebearer forces an advisor to reveal their loyalty card"),
 
-            new Entry(ActionEffect.Peek3Distribute, "The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish", 1),
-            new Entry(ActionEffect.DieSeatDiscard2, "Roll the die, that seat discards 2 cards", 2),
-            new Entry(ActionEffect.RedrawHand, "Choose an advisor: they discard their entire hand, then draw that many cards", 2),
-            new Entry(ActionEffect.ShowHandDiscard1, "Choose an advisor: they show their hand to the court, then secretly discard 1 card", 2),
-            new Entry(ActionEffect.SwapHands, "Choose two advisors: they swap hands with each other", 2),
-            new Entry(ActionEffect.Draw1, "Choose an advisor: they draw 1 card", 2),
-            new Entry(ActionEffect.LeastCardsDraw2, "The advisor with the fewest cards draws 2 cards (tie: nothing happens)", 1),
-            new Entry(ActionEffect.RevealedDraw2, "All revealed advisors draw 2 cards", 2),
+            new Entry(ActionEffect.Peek3Distribute, "The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish"),
+            new Entry(ActionEffect.DieSeatDiscard2, "Roll the die, that seat discards 2 cards"),
+            new Entry(ActionEffect.RedrawHand, "Choose an advisor: they discard their entire hand, then draw that many cards"),
+            new Entry(ActionEffect.ShowHandDiscard1, "Choose an advisor: they show their hand to the court, then secretly discard 1 card"),
+            new Entry(ActionEffect.SwapHands, "Choose two advisors: they swap hands with each other"),
+            new Entry(ActionEffect.Draw1, "Choose an advisor: they draw 1 card"),
+            new Entry(ActionEffect.LeastCardsDraw2, "The advisor with the fewest cards draws 2 cards (tie: nothing happens)"),
+            new Entry(ActionEffect.RevealedDraw2, "All revealed advisors draw 2 cards"),
 
-            new Entry(ActionEffect.DieNextTrustedAdvisor, "Roll the die, that advisor is next round's trusted advisor", 2),
-            new Entry(ActionEffect.NextTrustedMustReveal, "The next trusted advisor must reveal themselves", 1),
-            new Entry(ActionEffect.FaceUpNextRound, "All advisors play their cards face up next round", 1),
-            new Entry(ActionEffect.EnactTwoNextRound, "Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them", 2),
-            new Entry(ActionEffect.AllAdviceToThronebearerNextRound, "Next round all advice cards are given to the thronebearer instead of the trusted advisor", 1),
-            new Entry(ActionEffect.BlindNextRound, "Next round, nobody may look at any card's face - not your hand, not what's kept, not what's enacted", 2),
+            new Entry(ActionEffect.DieNextTrustedAdvisor, "Roll the die, that advisor is next round's trusted advisor"),
+            new Entry(ActionEffect.NextTrustedMustReveal, "The next trusted advisor must reveal themselves"),
+            new Entry(ActionEffect.FaceUpNextRound, "All advisors play their cards face up next round"),
+            new Entry(ActionEffect.EnactTwoNextRound, "Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them"),
+            new Entry(ActionEffect.AllAdviceToThronebearerNextRound, "Next round all advice cards are given to the thronebearer instead of the trusted advisor"),
+            new Entry(ActionEffect.BlindNextRound, "Next round, nobody may look at any card's face - not your hand, not what's kept, not what's enacted"),
 
-            new Entry(ActionEffect.DieSwapWithThronebearer, "Roll the die, the thronebearer swaps places with that seat", 2),
-            new Entry(ActionEffect.ChooseSwapSeat, "The thronebearer chooses an advisor to swap seats with", 4),
-            new Entry(ActionEffect.SwapSeatAndReveal, "The thronebearer swaps seats with an advisor, that advisor reveals themselves", 1),
-            new Entry(ActionEffect.KingSwapsWithThronebearer, "The king swaps places with the thronebearer", 2),
-            new Entry(ActionEffect.RotateLeft, "All players rotate one seat to the left", 1),
+            new Entry(ActionEffect.DieSwapWithThronebearer, "Roll the die, the thronebearer swaps places with that seat"),
+            new Entry(ActionEffect.ChooseSwapSeat, "The thronebearer chooses an advisor to swap seats with"),
+            new Entry(ActionEffect.SwapSeatAndReveal, "The thronebearer swaps seats with an advisor, that advisor reveals themselves"),
+            new Entry(ActionEffect.KingSwapsWithThronebearer, "The king swaps places with the thronebearer"),
+            new Entry(ActionEffect.RotateLeft, "All players rotate one seat to the left"),
         };
 
-        /// <summary>At 8+ players the deck doubles (every entry's count x2) so the table doesn't run dry round after round.</summary>
-        public static int Multiplier(int playerCount) { return playerCount >= 8 ? 2 : 1; }
+        /// <summary>At large tables the deck is multiplied (BalanceConfig.LargeTableMinPlayers / DeckMultiplierLargeTable) so the table doesn't run dry round after round.</summary>
+        public static int Multiplier(int playerCount, BalanceConfig balance = null) { return (balance ?? BalanceConfig.Current).DeckMultiplier(playerCount); }
 
-        public static int TotalCards(int playerCount)
+        /// <summary>Copies of one card in the deck, before the large-table multiplier.</summary>
+        public static int CountOf(ActionEffect effect, BalanceConfig balance = null) { return (balance ?? BalanceConfig.Current).CopiesOf(effect); }
+
+        public static int TotalCards(int playerCount, BalanceConfig balance = null)
         {
+            var b = balance ?? BalanceConfig.Current;
             int n = 0;
-            foreach (var e in Entries) n += e.Count;
-            return n * Multiplier(playerCount);
+            foreach (var e in Entries) n += b.CopiesOf(e.Effect);
+            return n * b.DeckMultiplier(playerCount);
         }
 
-        public static List<ActionCard> BuildDeck(int playerCount)
+        public static List<ActionCard> BuildDeck(int playerCount, BalanceConfig balance = null)
         {
-            int mult = Multiplier(playerCount);
+            var b = balance ?? BalanceConfig.Current;
+            int mult = b.DeckMultiplier(playerCount);
             var deck = new List<ActionCard>();
             int id = 0;
             foreach (var e in Entries)
-                for (int i = 0; i < e.Count * mult; i++)
+                for (int i = 0; i < b.CopiesOf(e.Effect) * mult; i++)
                     deck.Add(new ActionCard(id++, e.Effect, e.Text));
             return deck;
         }

@@ -19,10 +19,11 @@ namespace KingsCourt.Core
     public sealed class Game
     {
         public const int ThroneSeat = 0;
-        public const int DefaultHandSize = 3;
         public const int MinPlayers = 5;
         public const int MaxPlayers = 10;
-        /// <summary>Starting/refill hand size. Scenario-configurable (Build 5); defaults to the standard 3.</summary>
+        /// <summary>Build 8: every balance number the engine uses (see BalanceConfig). Read-only for the life of a game.</summary>
+        public readonly BalanceConfig Balance;
+        /// <summary>Starting/refill hand size. Scenario-configurable (Build 5); defaults to the balance config's hand size.</summary>
         public readonly int HandSize;
         /// <summary>Scenario-configurable (Build 5): when false, step 5 of the round ("everyone draws back
         /// what they played") is skipped entirely - hands only ever shrink, the Poisoned Crown shape.</summary>
@@ -31,8 +32,6 @@ namespace KingsCourt.Core
         /// the standard checks. Returning a Winner ends the game with that result and the given reason.</summary>
         public Func<Game, Winner?> ScenarioEndCheck;
         public string ScenarioEndReason = "The scenario's end condition was met.";
-        /// <summary>The Lovers win instantly once alive-count drops to this many, provided both are among them.</summary>
-        public const int LoversWinAliveThreshold = 5;
 
         public readonly List<Player> Players = new List<Player>();
         public readonly List<ActionCard> Deck;
@@ -89,12 +88,14 @@ namespace KingsCourt.Core
         /// dying again, permanently. Decremented at the end of each round they get to actually play.</summary>
         private readonly Dictionary<int, int> borrowedLifeRoundsLeft = new Dictionary<int, int>();
 
-        public Game(int playerCount, int seed, IList<IPlayerAgent> playerAgents, int handSize = DefaultHandSize, bool refillAtEndOfTurn = true)
+        public Game(int playerCount, int seed, IList<IPlayerAgent> playerAgents, int handSize = 0, bool refillAtEndOfTurn = true, BalanceConfig balance = null)
         {
             if (playerCount < MinPlayers || playerCount > MaxPlayers)
                 throw new ArgumentOutOfRangeException("playerCount", "King's Court is for 5 to 10 players.");
             if (playerAgents == null || playerAgents.Count != playerCount)
                 throw new ArgumentException("One agent per player is required.");
+            Balance = balance ?? BalanceConfig.Current;
+            if (handSize <= 0) handSize = Balance.HandSize;   // 0 = the standard hand size from the config
             if (handSize < 1) throw new ArgumentOutOfRangeException("handSize", "A hand size below 1 leaves nobody anything to play.");
 
             HandSize = handSize;
@@ -111,7 +112,7 @@ namespace KingsCourt.Core
                 Players.Add(new Player(i, "Player " + (i + 1), roles[i], seat));
             }
 
-            Deck = ActionCatalog.BuildDeck(playerCount);
+            Deck = ActionCatalog.BuildDeck(playerCount, Balance);
             Shuffle(Deck);
             foreach (var p in Players) DrawInto(p, HandSize);
             Say("The court is seated: " + playerCount + " players.");
@@ -149,12 +150,12 @@ namespace KingsCourt.Core
         /// </summary>
         private List<Role> DealRoles(int n)
         {
-            const double prophetChance = 0.15;
-            const double reaperChance = 0.08;
-            const double loversChance = 0.10;
-            bool guaranteedChaos = n >= 6;
-            bool guaranteedLoyalist = n >= 7;
-            double loyalistShare = n == 5 ? 0.7 : n == 6 ? 0.5 : 0.2;
+            double prophetChance = Balance.ProphetChance;
+            double reaperChance = Balance.ReaperChance;
+            double loversChance = Balance.LoversChance;
+            bool guaranteedChaos = n >= Balance.GuaranteedChaosMinPlayers;
+            bool guaranteedLoyalist = n >= Balance.GuaranteedLoyalistMinPlayers;
+            double loyalistShare = Balance.LoyalistShare(n);
             bool reaperTried = false, loversTried = false;
 
             var roles = new List<Role> { Role.King, Role.Prince, Role.Nobleman };
@@ -188,7 +189,7 @@ namespace KingsCourt.Core
                     if (rng.NextDouble() < reaperChance) { roles.Add(TakeRandom(reaperPool)); continue; }
                 }
 
-                bool roomForLovers = n >= 7 && n - roles.Count >= 2;
+                bool roomForLovers = n >= Balance.LoversMinPlayers && n - roles.Count >= 2;
                 bool loversEligible = loversPool.Count > 0 && roomForLovers && !loversTried;
                 if (loversEligible)
                 {
@@ -271,14 +272,15 @@ namespace KingsCourt.Core
 
         // ---------------------------------------------------------------- main loop
 
-        public GameResult Run(int maxRounds = 200)
+        public GameResult Run(int maxRounds = 0)
         {
             // Only for all-bot games: every task completes synchronously, so this never blocks.
             return RunAsync(maxRounds).GetAwaiter().GetResult();
         }
 
-        public async Task<GameResult> RunAsync(int maxRounds = 200)
+        public async Task<GameResult> RunAsync(int maxRounds = 0)
         {
+            if (maxRounds <= 0) maxRounds = Balance.MaxRounds;
             while (Result == null)
             {
                 if (Round >= maxRounds) { End(Winner.Draw, "Round limit reached."); break; }
@@ -321,7 +323,7 @@ namespace KingsCourt.Core
             if (Result != null) return;
             Round++;
             EnsureThrone();
-            if (AlivePlayers.Count() < 3) { End(Winner.Draw, "Too few players left to hold a court."); return; }
+            if (AlivePlayers.Count() < Balance.MinPlayersAlive) { End(Winner.Draw, "Too few players left to hold a court."); return; }
 
             // The Queen's ability refreshes each time she newly takes the throne (not once per game).
             var roundStartTb = Thronebearer;
@@ -382,7 +384,7 @@ namespace KingsCourt.Core
             if (!roundAllToThronebearer)
             {
                 int drawn = 0;
-                while (played.Count < 3)
+                while (played.Count < Balance.FilterChoices)
                 {
                     var topCard = DrawOne();
                     if (topCard == null) break;
@@ -406,7 +408,7 @@ namespace KingsCourt.Core
             {
                 forKing = new List<PlayedCard>();
                 var pool = new List<PlayedCard>(played);
-                int keep = roundKeepThree ? 3 : 2;
+                int keep = roundKeepThree ? Balance.CardsKeptDoubleDecree : Balance.CardsKept;
                 while (forKing.Count < keep && pool.Count > 0)
                 {
                     int i = await PickCardForAsync(ta, "Pass this card to the king", pool.Select(x => x.Card).ToList(), ChoiceKind.KeepCard, PlayedNotes(pool));
@@ -420,7 +422,7 @@ namespace KingsCourt.Core
             await Beat(600);
 
             // 4. Thronebearer picks and enacts.
-            int enact = roundEnactTwo ? 2 : 1;
+            int enact = roundEnactTwo ? Balance.CardsEnactedDoubleDecree : Balance.CardsEnacted;
             for (int n = 0; n < enact && forKing.Count > 0 && Result == null; n++)
             {
                 int i = await PickCardForAsync(tb, "Choose the card to enact", forKing.Select(x => x.Card).ToList(), ChoiceKind.EnactCard, PlayedNotes(forKing));
@@ -432,7 +434,7 @@ namespace KingsCourt.Core
                 LastEnacted = c;
                 EnactedSeq++;
                 EnactedHistory.Add(c);
-                if (EnactedHistory.Count > 3) EnactedHistory.RemoveAt(0);
+                if (EnactedHistory.Count > Balance.EnactedHistoryShown) EnactedHistory.RemoveAt(0);
                 NotifyChanged();
                 await Beat(900);
                 await ResolveAsync(c, tb, ta);
@@ -495,8 +497,8 @@ namespace KingsCourt.Core
                     ally.Revealed = true;
                     ally.Seat = FindFreeSeat(ally.Seat);
                     DrawInto(ally, HandSize);
-                    borrowedLifeRoundsLeft[ally.Id] = 3;
-                    Say(ally.Name + " is brought back to life for 3 rounds, revealed as " + ally.Role + ".");
+                    borrowedLifeRoundsLeft[ally.Id] = Balance.MediumReviveRounds;
+                    Say(ally.Name + " is brought back to life for " + Balance.MediumReviveRounds + " rounds, revealed as " + ally.Role + ".");
                 }
                 pendingResurrectId = -1;
             }
@@ -504,7 +506,7 @@ namespace KingsCourt.Core
             EnsureThrone();
             var now = Thronebearer;
             princeStreak = (now != null && now.Role == Role.Prince) ? princeStreak + 1 : 0;
-            if (princeStreak >= 4) End(Winner.Traitors, "The Prince held the throne for 4 consecutive rounds.");
+            if (princeStreak >= Balance.PrinceThroneRoundsToWin) End(Winner.Traitors, "The Prince held the throne for " + Balance.PrinceThroneRoundsToWin + " consecutive rounds.");
             NotifyChanged();
             await Beat(500);
         }
@@ -523,10 +525,10 @@ namespace KingsCourt.Core
 
         private async Task PlayCardsAsync(Player p, List<PlayedCard> played)
         {
-            int count = p.Role == Role.Elder && p.Revealed ? 2 : 1;
+            int count = p.Role == Role.Elder && p.Revealed ? Balance.ElderCardsRevealed : Balance.ElderCardsHidden;
             for (int i = 0; i < count && p.Hand.Count > 0; i++)
             {
-                string prompt = count == 2 ? "Play an action card (" + (i + 1) + " of 2)" : "Play an action card";
+                string prompt = count > 1 ? "Play an action card (" + (i + 1) + " of " + count + ")" : "Play an action card";
                 var card = p.Hand[await PickCardForAsync(p, prompt, p.Hand.ToList(), ChoiceKind.PlayCard)];
                 p.Hand.Remove(card);
                 inPlay.Add(card);
@@ -606,9 +608,9 @@ namespace KingsCourt.Core
 
                     case Role.Nobleman:
                         var nTargets = AlivePlayers.Where(a => a != p && a.Hand.Count > 0).Select(a => a.Id).ToList();
-                        if (nTargets.Count >= 2 && await AskAsync(p, "Use Riches And Spoils?"))
+                        if (nTargets.Count >= Balance.NoblemanTakes && await AskAsync(p, "Use Riches And Spoils?"))
                         {
-                            for (int k = 0; k < 2; k++)
+                            for (int k = 0; k < Balance.NoblemanTakes; k++)
                             {
                                 var v = ById(nTargets[await PickAsync(p, "Take a card from whom?", nTargets, false)]);
                                 nTargets.Remove(v.Id);
@@ -651,10 +653,10 @@ namespace KingsCourt.Core
                         var deadIds = Players.Where(x => !x.Alive).Select(x => x.Id).ToList();
                         if (deadIds.Count > 0 && await AskAsync(p, "Use Commune With the Dead?"))
                         {
-                            var ally = ById(deadIds[await PickAsync(p, "Who do you bring back for 2 rounds?", deadIds, false)]);
+                            var ally = ById(deadIds[await PickAsync(p, "Who do you bring back for " + Balance.MediumReviveRounds + " rounds?", deadIds, false)]);
                             pendingResurrectId = ally.Id;
                             p.AbilityUsed = true;
-                            Say(p.Name + " (Medium) brings " + ally.Name + " back for 2 rounds.");
+                            Say(p.Name + " (Medium) brings " + ally.Name + " back for " + Balance.MediumReviveRounds + " rounds.");
                         }
                         break;
                 }
@@ -717,7 +719,7 @@ namespace KingsCourt.Core
 
                 case ActionEffect.Peek3Distribute:
                     {
-                        var top = DrawCards(3);
+                        var top = DrawCards(Balance.PeekCards);
                         var ids = advisors.Select(a => a.Id).ToList();
                         foreach (var c in top)
                         {
@@ -732,13 +734,13 @@ namespace KingsCourt.Core
                     {
                         var p = RollSeat();
                         if (p == null) { Say("The die landed on an empty seat."); break; }
-                        for (int i = 0; i < 2 && p.Hand.Count > 0; i++)
+                        for (int i = 0; i < Balance.DieDiscardCards && p.Hand.Count > 0; i++)
                         {
                             var c = p.Hand[await PickCardForAsync(p, "Discard a card", p.Hand.ToList(), ChoiceKind.DiscardCard)];
                             p.Hand.Remove(c);
                             Discard.Add(c);
                         }
-                        Say(p.Name + " discards 2 cards.");
+                        Say(p.Name + " discards " + Balance.DieDiscardCards + " cards.");
                         break;
                     }
                 case ActionEffect.RedrawHand:
@@ -786,17 +788,17 @@ namespace KingsCourt.Core
                 case ActionEffect.Draw1:
                     {
                         var p = await PickOneAsync(tb, advisors, "Which advisor draws a card?");
-                        if (p != null) DrawInto(p, 1);
+                        if (p != null) DrawInto(p, Balance.DrawOneCards);
                         break;
                     }
                 case ActionEffect.LeastCardsDraw2:
                     {
                         var p = UniqueByCount(advisors, false);
-                        if (p != null) DrawInto(p, 2); else Say("Tie for fewest cards. Nothing happens.");
+                        if (p != null) DrawInto(p, Balance.LeastCardsDrawCards); else Say("Tie for fewest cards. Nothing happens.");
                         break;
                     }
                 case ActionEffect.RevealedDraw2:
-                    foreach (var p in advisors.Where(a => a.Revealed)) DrawInto(p, 2);
+                    foreach (var p in advisors.Where(a => a.Revealed)) DrawInto(p, Balance.RevealedDrawCards);
                     break;
 
                 case ActionEffect.DieNextTrustedAdvisor:
@@ -892,7 +894,7 @@ namespace KingsCourt.Core
         /// once fewer than 3 players are left) can't loop forever.</summary>
         private Player RollSeatRerollEmpty()
         {
-            for (int i = 0; i < SeatCount * 4; i++)
+            for (int i = 0; i < SeatCount * Balance.DieRerollsPerSeat; i++)
             {
                 var p = RollSeat();
                 if (p != null) return p;
@@ -952,9 +954,9 @@ namespace KingsCourt.Core
             if (Result != null) return;
 
             var lovers = Players.Where(x => x.Role == Role.Lovers).ToList();
-            if (lovers.Count == 2 && lovers.All(x => x.Alive) && AlivePlayers.Count() <= LoversWinAliveThreshold)
+            if (lovers.Count == 2 && lovers.All(x => x.Alive) && AlivePlayers.Count() <= Balance.LoversWinAliveThreshold)
             {
-                End(Winner.Lovers, "The Lovers made it to the final " + LoversWinAliveThreshold + " together.");
+                End(Winner.Lovers, "The Lovers made it to the final " + Balance.LoversWinAliveThreshold + " together.");
                 return;
             }
 

@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f21eb049fba6df441ad2e525b55214b8, type: 3}
+  m_Name: BalanceConfig
+  m_EditorClassIdentifier: KingsCourt.Unity::KingsCourt.UnityLayer.BalanceAsset
+  Values:
+    HandSize: 3
+    ProphetChance: 0.15
+    ReaperChance: 0.08
+    LoversChance: 0.1
+    GuaranteedChaosMinPlayers: 6
+    GuaranteedLoyalistMinPlayers: 7
+    LoversMinPlayers: 7
+    LoyalistShare5Players: 0.7
+    LoyalistShare6Players: 0.5
+    LoyalistShare7PlusPlayers: 0.2
+    FilterChoices: 3
+    CardsKept: 2
+    CardsKeptDoubleDecree: 3
+    CardsEnacted: 1
+    CardsEnactedDoubleDecree: 2
+    EnactedHistoryShown: 3
+    MinPlayersAlive: 3
+    MaxRounds: 200
+    PrinceThroneRoundsToWin: 4
+    LoversWinAliveThreshold: 5
+    ElderCardsRevealed: 2
+    ElderCardsHidden: 1
+    NoblemanTakes: 2
+    MediumReviveRounds: 3
+    PeekCards: 3
+    DieDiscardCards: 2
+    DrawOneCards: 1
+    LeastCardsDrawCards: 2
+    RevealedDrawCards: 2
+    DieRerollsPerSeat: 4
+    LargeTableMinPlayers: 8
+    DeckMultiplierLargeTable: 2
+    DeckCounts:
+    - Effect: 0
+      Count: 1
+    - Effect: 1
+      Count: 1
+    - Effect: 2
+      Count: 2
+    - Effect: 3
+      Count: 1
+    - Effect: 4
+      Count: 2
+    - Effect: 5
+      Count: 1
+    - Effect: 6
+      Count: 1
+    - Effect: 7
+      Count: 1
+    - Effect: 8
+      Count: 1
+    - Effect: 9
+      Count: 1
+    - Effect: 10
+      Count: 1
+    - Effect: 11
+      Count: 2
+    - Effect: 12
+      Count: 2
+    - Effect: 13
+      Count: 2
+    - Effect: 14
+      Count: 2
+    - Effect: 15
+      Count: 2
+    - Effect: 16
+      Count: 1
+    - Effect: 17
+      Count: 2
+    - Effect: 18
+      Count: 2
+    - Effect: 19
+      Count: 1
+    - Effect: 20
+      Count: 1
+    - Effect: 21
+      Count: 2
+    - Effect: 22
+      Count: 1
+    - Effect: 23
+      Count: 2
+    - Effect: 24
+      Count: 2
+    - Effect: 25
+      Count: 4
+    - Effect: 26
+      Count: 1
+    - Effect: 27
+      Count: 2
+    - Effect: 28
+      Count: 1

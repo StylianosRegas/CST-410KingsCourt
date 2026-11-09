@@ -71,7 +71,7 @@ internal static class RulesTest
             // R-08 and R-09 are setup rules: check them before a single card is played.
             setupChecks++;
             foreach (var p in game.Players)
-                if (p.Hand.Count != Game.DefaultHandSize) fail(Rules.SetupHandOfThree, "seed " + g + ": " + p.Name + " has " + p.Hand.Count + " cards");
+                if (p.Hand.Count != game.Balance.HandSize) fail(Rules.SetupHandOfThree, "seed " + g + ": " + p.Name + " has " + p.Hand.Count + " cards");
             var revealed = game.Players.Where(p => p.Revealed).ToList();
             if (revealed.Count != 1 || revealed[0].Role != Role.King || revealed[0].Seat != Game.ThroneSeat)
                 fail(Rules.OnlyKingStartsRevealed, "seed " + g + ": revealed at start = " + string.Join(", ", revealed.Select(p => p.ToString())));

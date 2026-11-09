@@ -16,7 +16,7 @@ namespace KingsCourt.Core
         public string Description;
         public int PlayerCount;
         public int RoundLimit;          // 0 = no cap beyond the engine's own safety limit
-        public int HandSize = Game.DefaultHandSize;
+        public int HandSize;            // 0 = the standard hand size from the balance config
         public bool RefillAtEndOfTurn = true;
         public string Experience;       // the one-word tone from the write-up (Cozy, Sprawling, Frantic, ...)
         public string LeadDial;         // the one knob that makes this scenario what it is
@@ -26,9 +26,9 @@ namespace KingsCourt.Core
         public Func<Game, Winner?> EndCheck;
         public string EndCheckReason;
 
-        public Game Start(System.Collections.Generic.IList<IPlayerAgent> agents, int seed)
+        public Game Start(System.Collections.Generic.IList<IPlayerAgent> agents, int seed, BalanceConfig balance = null)
         {
-            var g = new Game(PlayerCount, seed, agents, HandSize, RefillAtEndOfTurn);
+            var g = new Game(PlayerCount, seed, agents, HandSize, RefillAtEndOfTurn, balance);
             if (EndCheck != null) { g.ScenarioEndCheck = EndCheck; g.ScenarioEndReason = EndCheckReason; }
             return g;
         }

@@ -6,6 +6,28 @@ using KingsCourt.Core;
 // Plays many bot-only games and checks engine invariants. Run: dotnet run --project Tools/RulesSim
 internal static class Program
 {
+    /// <summary>Plays the same seeded bot games at every player count and hashes every game's full log. Two
+    /// builds of the engine that print the same hash played identical games, move for move. Used to prove a
+    /// refactor (Build 8: moving the balance numbers into one config) changed no behavior.</summary>
+    private static int Fingerprint(int games)
+    {
+        var sha = System.Security.Cryptography.SHA256.Create();
+        long rounds = 0; int count = 0;
+        var all = new System.Text.StringBuilder();
+        for (int players = Game.MinPlayers; players <= Game.MaxPlayers; players++)
+            for (int g = 0; g < games; g++)
+            {
+                var agents = Enumerable.Range(0, players).Select(i => (IPlayerAgent)new RandomAgent(g * 100 + i)).ToList();
+                var game = new Game(players, g, agents);
+                game.Run();
+                rounds += game.Round; count++;
+                all.Append(game.Result.Winner).Append('|').Append(game.Result.Reason).Append('\n').Append(string.Join("\n", game.Log)).Append('\n');
+            }
+        var hash = BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(all.ToString()))).Replace("-", "");
+        Console.WriteLine("fingerprint games=" + count + " totalRounds=" + rounds + " chars=" + all.Length + " sha256=" + hash);
+        return 0;
+    }
+
     private static int Main(string[] args)
     {
         if (args.Length > 0 && args[0] == "rules") return RulesTest.Run();
@@ -17,6 +39,7 @@ internal static class Program
             int traceSeed = args.Length > 3 ? int.Parse(args[3]) : 1;
             return PhaseTrace.Run(tracePlayers, traceRounds, traceSeed);
         }
+        if (args.Length > 0 && args[0] == "fingerprint") return Fingerprint(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "legality") return LegalityTests.Run(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "report") return Report.Run(args.Length > 1 ? int.Parse(args[1]) : 1000);
         if (args.Length > 0 && args[0] == "deal")

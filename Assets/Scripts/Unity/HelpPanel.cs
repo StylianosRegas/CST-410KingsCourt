@@ -125,7 +125,7 @@ namespace KingsCourt.UnityLayer
         public void ShowCards()
         {
             Clear();
-            Paragraph(null, "The action deck has " + ActionCatalog.TotalCards(5) + " cards (the deck doubles in size at 8 or more players). Number in brackets = copies in the deck.");
+            Paragraph(null, "The action deck has " + ActionCatalog.TotalCards(5) + " cards (the deck is multiplied at " + BalanceConfig.Current.LargeTableMinPlayers + " or more players). Number in brackets = copies in the deck.");
             foreach (var e in ActionCatalog.Entries)
             {
                 var cat = CardInfo.Category(e.Effect);
@@ -133,7 +133,7 @@ namespace KingsCourt.UnityLayer
                 UiKit.Size(row, 1200, 76);
                 var chip = UiKit.Box(row.transform, "Chip", CardView.CategoryColor(cat));
                 UiKit.Size(chip, 270, 64);
-                var t = UiKit.Label(chip, CardInfo.Title(e.Effect) + "  x" + e.Count, 24, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+                var t = UiKit.Label(chip, CardInfo.Title(e.Effect) + "  x" + ActionCatalog.CountOf(e.Effect), 24, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
                 UiKit.Stretch((RectTransform)t.transform, 6, 2, 6, 2);
                 var d = UiKit.Label(row.transform, e.Text, 22, Color.white, TextAnchor.MiddleLeft);
                 UiKit.Size(d, 880, 70);

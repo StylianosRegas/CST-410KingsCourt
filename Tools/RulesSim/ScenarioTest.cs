@@ -46,7 +46,7 @@ internal static class ScenarioTest
                 }
             }
 
-            Console.WriteLine(scenario.DisplayName + " (" + scenario.PlayerCount + "p, cap " + scenario.RoundLimit + ", hand " + scenario.HandSize +
+            Console.WriteLine(scenario.DisplayName + " (" + scenario.PlayerCount + "p, cap " + scenario.RoundLimit + ", hand " + (scenario.HandSize > 0 ? scenario.HandSize : BalanceConfig.Current.HandSize) +
                 (scenario.RefillAtEndOfTurn ? "" : ", no refill") + "): " +
                 string.Join(", ", winCounts.OrderBy(k => k.Key).Select(k => k.Key + " " + k.Value)) +
                 (scenario.EndCheck != null ? " | scenario-end fired " + scenarioEndFired + "/" + gamesPerScenario + " times" : ""));
