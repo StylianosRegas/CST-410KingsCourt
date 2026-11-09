@@ -25,6 +25,10 @@ internal static class Program
             }
         var hash = BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(all.ToString()))).Replace("-", "");
         Console.WriteLine("fingerprint games=" + count + " totalRounds=" + rounds + " chars=" + all.Length + " sha256=" + hash);
+        // Build 8 corrected one log line: the Medium's "brings X back for 2 rounds" now says 3, the real rule. Same length,
+        // so to compare with a pre-Build 8 hash, undo that one correction and hash again.
+        var legacy = all.ToString().Replace(" back for 3 rounds.", " back for 2 rounds.");
+        Console.WriteLine("  as before the Medium wording fix: sha256=" + BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(legacy))).Replace("-", ""));
         return 0;
     }
 
@@ -39,6 +43,7 @@ internal static class Program
             int traceSeed = args.Length > 3 ? int.Parse(args[3]) : 1;
             return PhaseTrace.Run(tracePlayers, traceRounds, traceSeed);
         }
+        if (args.Length > 0 && args[0] == "tune") return TuneDemo.Run(args);
         if (args.Length > 0 && args[0] == "fingerprint") return Fingerprint(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "legality") return LegalityTests.Run(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "report") return Report.Run(args.Length > 1 ? int.Parse(args[1]) : 1000);
