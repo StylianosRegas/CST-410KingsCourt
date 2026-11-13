@@ -48,6 +48,8 @@ internal static class Program
         }
         if (args.Length > 0 && args[0] == "tune") return TuneDemo.Run(args);
         if (args.Length > 0 && args[0] == "fingerprint") return Fingerprint(args.Length > 1 ? int.Parse(args[1]) : 300);
+        if (args.Length > 0 && args[0] == "setup") return SetupCheck.Setup(args.Length > 1 ? int.Parse(args[1]) : 200);
+        if (args.Length > 0 && args[0] == "manifest") return SetupCheck.Manifest();
         if (args.Length > 0 && args[0] == "legality") return LegalityTests.Run(args.Length > 1 ? int.Parse(args[1]) : 300);
         if (args.Length > 0 && args[0] == "report") return Report.Run(args.Length > 1 ? int.Parse(args[1]) : 1000);
         if (args.Length > 0 && args[0] == "deal")
