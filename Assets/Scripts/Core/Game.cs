@@ -16,7 +16,7 @@ namespace KingsCourt.Core
     /// simulated with bots, and later driven by a network layer.
     /// Assumptions where the GDD is silent are listed in Assets/Docs/RULES_ASSUMPTIONS.md.
     /// </summary>
-    public sealed class Game
+    public sealed partial class Game
     {
         public const int ThroneSeat = 0;
         public const int MinPlayers = 5;
@@ -90,31 +90,23 @@ namespace KingsCourt.Core
 
         public Game(int playerCount, int seed, IList<IPlayerAgent> playerAgents, int handSize = 0, bool refillAtEndOfTurn = true, BalanceConfig balance = null)
         {
-            if (playerCount < MinPlayers || playerCount > MaxPlayers)
-                throw new ArgumentOutOfRangeException("playerCount", "King's Court is for 5 to 10 players.");
-            if (playerAgents == null || playerAgents.Count != playerCount)
-                throw new ArgumentException("One agent per player is required.");
-            Balance = balance ?? BalanceConfig.Current;
-            if (handSize <= 0) handSize = Balance.HandSize;   // 0 = the standard hand size from the config
-            if (handSize < 1) throw new ArgumentOutOfRangeException("handSize", "A hand size below 1 leaves nobody anything to play.");
-
+            // The setup procedure (Build 9). These are the numbered steps a player follows to get from a closed box
+            // to the first action, in the same order, one method per step, each named after the step it
+            // implements. See SetupProcedure.cs and Assets/Docs/SETUP_PROCEDURE.md. Every step records itself in
+            // SetupSteps, so a test (and the parity check) can see which steps ran and in what order.
+            Balance = Step1_ChooseTheScenario(playerCount, playerAgents, ref handSize, balance);
             HandSize = handSize;
             RefillAtEndOfTurn = refillAtEndOfTurn;
             rng = new Random(seed);
             agents = playerAgents.ToArray();
 
-            var roles = DealRoles(playerCount);
-            var seats = Enumerable.Range(1, playerCount - 1).OrderBy(_ => rng.Next()).ToList();
-            for (int i = 0; i < playerCount; i++)
-            {
-                int seat = roles[i] == Role.King ? ThroneSeat : seats[0];
-                if (roles[i] != Role.King) seats.RemoveAt(0);
-                Players.Add(new Player(i, "Player " + (i + 1), roles[i], seat));
-            }
-
-            Deck = ActionCatalog.BuildDeck(playerCount, Balance);
-            Shuffle(Deck);
-            foreach (var p in Players) DrawInto(p, HandSize);
+            var chairs = Step2_LayOutTheTable(playerCount);
+            var roles = Step3_DealTheLoyaltyCards(playerCount);
+            Step4_SeatThePlayers(roles, chairs);
+            Deck = Step5_BuildTheActionDeck(playerCount);
+            Step6_ShuffleTheActionDeck();
+            Step7_DealTheStartingHands();
+            Step8_SeatTheKingAndOpenTheFirstRound();
             Say("The court is seated: " + playerCount + " players.");
         }
 
