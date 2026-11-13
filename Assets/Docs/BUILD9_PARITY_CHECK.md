@@ -6,13 +6,15 @@ The test for this build: set the physical game up with the box open, set the dig
 
 ## Starting position by scenario
 
-| Scenario | Players | Loyalty cards dealt | Action deck | Cards per hand | Hands total | Draw pile | First player | Physical box matches? |
-|---|---|---|---|---|---|---|---|---|
-| The Quiet Court | 5 | 5 | 45 | 3 | 15 | 30 | the King, on the throne | to confirm |
-| The Falling Hourglass | 6 | 6 | 45 | 3 | 18 | 27 | the King, on the throne | to confirm |
-| The Marked Court | 7 | 7 | 45 | 3 | 21 | 24 | the King, on the throne | to confirm |
-| The Crowded Table | 8 | 8 | 90 | 3 | 24 | 66 | the King, on the throne | to confirm |
-| The Poisoned Crown | 6 | 6 | 45 | 4 | 24 | 21 | the King, on the throne | to confirm |
+| Scenario | Players | Loyalty cards dealt | Action deck | Cards per hand | Hands total | Draw pile | First player | Draw pile seen in the WebGL build | Physical box matches? |
+|---|---|---|---|---|---|---|---|---|---|
+| The Quiet Court | 5 | 5 | 45 | 3 | 15 | 30 | the King, on the throne | 30 | to confirm |
+| The Falling Hourglass | 6 | 6 | 45 | 3 | 18 | 27 | the King, on the throne | 27 (the scenario text says 24, see below) | to confirm |
+| The Marked Court | 7 | 7 | 45 | 3 | 21 | 24 | the King, on the throne | 24 | to confirm |
+| The Crowded Table | 8 | 8 | 90 | 3 | 24 | 66 | the King, on the throne | 66 | to confirm |
+| The Poisoned Crown | 6 | 6 | 45 | 4 | 24 | 21 | the King, on the throne | 21 | to confirm |
+
+"Seen in the WebGL build" is the draw-pile number on the table's screen right after pressing Play on each scenario in the Build 9 WebGL build (recorded on 2026-11-13). All five match the generated numbers.
 
 The same checks also pass at every player count from 5 to 10 with the default settings (deck 45 at 5 to 7 players, 90 at 8 to 10).
 
@@ -30,6 +32,8 @@ Choose a scenario, then the eight steps in `SETUP_PROCEDURE.md`. The last comman
 - the Reaper can only appear after a Queen has been dealt, and the Lovers only at 7 or more players while two seats are still free, each getting exactly one chance.
 
 These rules are in `Game.DealRoles` (`Assets/Scripts/Core/Game.cs`) and written up in `RULES_ASSUMPTIONS.md` (assumption 2, with the bot check over 3,000 games per size). What I did about it: kept the rules as written, put the deal behind the named step "Deal the loyalty cards", and added the cold-start check that one role card goes to each seat. What is still open: whether the table's dealer ever deals differently from these rules (for example, by choosing which Chaos card a seat gets), which only the physical side of this sheet can show.
+
+**A second disagreement, found by running the build: the Falling Hourglass draw pile.** The scenario's own text ("A 24-card draw pile with no reshuffle", and its lead dial "Twenty-four-card draw pile, no reshuffle") says 24. The setup deals every player 3 cards from the standard 45-card deck, which leaves a 27-card draw pile, and the scenario's end check only asks whether the pile is empty (`EndCheck = g => g.Deck.Count == 0`). So the number in the text and the number in the build differ by 3. I did not change either, because the fix depends on what the table means: a 24-card pile after the deal (a rule change), or the text being a rounded description (a text change). This is open and goes to the team.
 
 ## Other differences to confirm against the box
 
