@@ -126,7 +126,7 @@ namespace KingsCourt.UnityLayer
                 img.sprite = SpriteFactory.Icon(role);
                 img.preserveAspect = true;
                 var team = RoleInfo.FactionOf(role);
-                var text = UiKit.Label(row.transform, role + "  (" + team + ")\n" + RoleInfo.AbilityText(role), 24, Color.white, TextAnchor.MiddleLeft);
+                var text = UiKit.Label(row.transform, RoleInfo.DisplayName(role) + "  (" + team + ")\n" + RoleInfo.AbilityText(role), 24, Color.white, TextAnchor.MiddleLeft);
                 UiKit.Size(text, 900, 100);
             }
         }

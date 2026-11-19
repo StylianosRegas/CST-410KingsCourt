@@ -26,6 +26,13 @@ namespace KingsCourt.Core
             }
         }
 
+        /// <summary>role.ToString() is what every UI label used to show directly - fine for every role
+        /// except CourtWizard, which has no internal space and so rendered as one run-together word.</summary>
+        public static string DisplayName(Role role)
+        {
+            return role == Role.CourtWizard ? "Court Wizard" : role.ToString();
+        }
+
         public static string AbilityText(Role role, BalanceConfig b = null)
         {
             b = b ?? BalanceConfig.Current;
