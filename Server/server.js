@@ -25,15 +25,24 @@ const rooms = new Map();            // code -> { host: ws, peers: Map<id, ws>, n
 
 function log(...a) { console.log(new Date().toISOString().slice(11, 19), ...a); }
 
-// The best guess at an address phones on the same Wi-Fi can actually reach. Link-local (169.254.x.x,
-// assigned when a real address never came through, e.g. no DHCP) is a last resort, not a real LAN
-// address, so a normal private address is always preferred over one when both are present.
+// The best guess at an address phones on the same Wi-Fi can actually reach. Two kinds of address get
+// deprioritized because a phone on the same Wi-Fi cannot route to them, only treated as a last resort
+// if nothing else is available:
+//   - link-local (169.254.x.x), assigned when a real address never came through, e.g. no DHCP.
+//   - carrier-grade NAT (100.64.0.0/10), which is what Tailscale (and other VPN/overlay networks) hand
+//     out to their virtual adapter - reachable only by other devices on that same VPN, not by a phone
+//     that just joined the classroom/home Wi-Fi.
 function lanAddresses() {
   const nets = require('os').networkInterfaces();
   const all = [];
   for (const list of Object.values(nets))
     for (const n of list) if (n.family === 'IPv4' && !n.internal) all.push(n.address);
-  const real = all.filter((a) => !a.startsWith('169.254.'));
+  const isLinkLocal = (a) => a.startsWith('169.254.');
+  const isCgnat = (a) => {
+    const octets = a.split('.').map(Number);
+    return octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127;
+  };
+  const real = all.filter((a) => !isLinkLocal(a) && !isCgnat(a));
   return real.length > 0 ? real : all;
 }
 
