@@ -1,0 +1,38 @@
+Simulated 6000 games (1000 each at 5 to 10 players, random-choice bots)
+
+TEAM RESULTS
+  Traitors   2390   39.8%
+  Jester     1263   21.1%
+  Draw       1145   19.1%
+  Loyalists  1119   18.7%
+  Lovers       53    0.9%
+  Reaper       30    0.5%
+
+ROLE   (wins / games the role was in play; a role wins when its team wins)
+  King         1119 /  6000    18.7%   in play 100.0%
+  Queen         712 /  3631    19.6%   in play  60.5%
+  Knight        725 /  3585    20.2%   in play  59.8%
+  Elder         729 /  3585    20.3%   in play  59.8%
+  CourtWizard   698 /  3555    19.6%   in play  59.3%
+  Prince       2390 /  6000    39.8%   in play 100.0%
+  Nobleman     2390 /  6000    39.8%   in play 100.0%
+  Jester       1263 /  2729    46.3%   in play  45.5%
+  Beggar        903 /  2730    33.1%   in play  45.5%
+  Prophet      1061 /  2606    40.7%   in play  43.4%
+  Reaper         30 /   209    14.4%   in play   3.5%
+  Lovers        106 /   762    13.9%   in play  12.7%
+  Medium        702 /  3608    19.5%   in play  60.1%
+
+ROUNDS PER GAME: mean 19.3, median 16, 90th pct 39, max 109
+  5 players: mean 13.4 rounds
+  6 players: mean 15.2 rounds
+  7 players: mean 17.1 rounds
+  8 players: mean 19.9 rounds
+  9 players: mean 22.8 rounds
+  10 players: mean 27.1 rounds
+
+ESTIMATED PLAY TIME (setup 3 min + rounds x per-round time)
+  Fast   (95s/round)  average  33 min   median  28 min   90th pct  65 min
+  Normal (190s/round)  average  64 min   median  54 min   90th pct 127 min
+  Slow   (300s/round)  average  99 min   median  83 min   90th pct 198 min
+exit=0

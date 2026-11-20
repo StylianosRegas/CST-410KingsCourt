@@ -1,0 +1,15 @@
+ok   R-01 (wrong seat) -> [R-01] It isn't your turn.
+ok   R-03 (bad index) -> [R-03] That isn't a valid option.
+ok   R-01 (stale decision id) -> [R-01] That choice is no longer open.
+ALL RULE-ID CHECKS PASSED
+
+Rulesheet rules R-06 to R-11 across 120 full games (5 to 10 players):
+  R-08 / R-09 setup checks .......... 120
+  R-10 play decisions checked ....... 9368
+  R-06 filter decisions checked ..... 2254
+  R-07 enact decisions checked ...... 2391 (38 skipped the filter by a card effect, which is allowed)
+  R-11 games that reshuffled the discard: 91, no card ever lost
+ALL RULESHEET CHECKS PASSED
+
+Rules not mechanically checked: No out-of-game collusion (table etiquette, not a game-state check - the engine has no way to observe side-channel conversation).
+exit=0

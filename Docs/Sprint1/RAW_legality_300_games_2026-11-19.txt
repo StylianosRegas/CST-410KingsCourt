@@ -1,0 +1,7 @@
+Wire round-trip and privacy checks passed
+Legality: 300 games with 2 scripted humans. Accepted 9973, refused 38908, bot takeovers 185
+  refused x20316: [R-03] That isn't a valid option.
+  refused x10158: [R-01] That choice is no longer open.
+  refused x5031: [R-02] You already played your card this round.
+  refused x3403: [R-01] It isn't your turn.
+LEGALITY CHECKS PASSED

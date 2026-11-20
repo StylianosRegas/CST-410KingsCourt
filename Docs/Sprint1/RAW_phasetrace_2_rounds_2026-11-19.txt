@@ -1,0 +1,116 @@
+  log: --- Round 1 --- thronebearer: Player 3
+
+=== Round 1 (thronebearer: player 2) ===
+[NameAdvisor] player 2 "Choose your trusted advisor" -> 4 legal move(s):
+    NameTrustedAdvisor #0 (player 0)
+    NameTrustedAdvisor #1 (player 1)
+    NameTrustedAdvisor #2 (player 3)
+    NameTrustedAdvisor #3 (player 4)
+[SubmitCards] player 1 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (All revealed advisors draw 2 cards)
+    PlayActionCard #1 (The king swaps places with the thronebearer)
+    PlayActionCard #2 (The thronebearer chooses an advisor to swap seats with)
+[SubmitCards] player 3 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (Roll the die, that seat discards 2 cards)
+    PlayActionCard #1 (Roll the die, that advisor is next round's trusted advisor)
+    PlayActionCard #2 (Roll the die, the thronebearer swaps places with that seat)
+[SubmitCards] player 4 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (Roll the die, that advisor is next round's trusted advisor)
+    PlayActionCard #1 (The trusted advisor forces another advisor to reveal themselves)
+    PlayActionCard #2 (The thronebearer swaps seats with an advisor, that advisor reveals themselves)
+[Filter] player 0 "Pass this card to the king" -> 3 legal move(s):
+    FilterToTwo #0 (Roll the die, that advisor is next round's trusted advisor)
+    FilterToTwo #1 (All revealed advisors draw 2 cards)
+    FilterToTwo #2 (The thronebearer swaps seats with an advisor, that advisor reveals themselves)
+[Filter] player 0 "Pass this card to the king" -> 2 legal move(s):
+    FilterToTwo #0 (Roll the die, that advisor is next round's trusted advisor)
+    FilterToTwo #1 (The thronebearer swaps seats with an advisor, that advisor reveals themselves)
+[Enact] player 2 "Choose the card to enact" -> 2 legal move(s):
+    EnactCard #0 (All revealed advisors draw 2 cards)
+    EnactCard #1 (Roll the die, that advisor is next round's trusted advisor)
+  log: --- Round 2 --- thronebearer: Player 3
+
+=== Round 2 (thronebearer: player 2) ===
+[NameAdvisor] player 2 "Choose your trusted advisor" -> 3 legal move(s):
+    NameTrustedAdvisor #0 (player 1)
+    NameTrustedAdvisor #1 (player 3)
+    NameTrustedAdvisor #2 (player 4)
+[SubmitCards] player 0 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them)
+    PlayActionCard #1 (The next trusted advisor must reveal themselves)
+    PlayActionCard #2 (The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish)
+[SubmitCards] player 1 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (The king swaps places with the thronebearer)
+    PlayActionCard #1 (The thronebearer chooses an advisor to swap seats with)
+    PlayActionCard #2 (Next round all advice cards are given to the thronebearer instead of the trusted advisor)
+[SubmitCards] player 3 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (Roll the die, that seat discards 2 cards)
+    PlayActionCard #1 (Roll the die, the thronebearer swaps places with that seat)
+    PlayActionCard #2 (Choose an advisor: they discard their entire hand, then draw that many cards)
+[Filter] player 4 "Pass this card to the king" -> 3 legal move(s):
+    FilterToTwo #0 (Roll the die, that seat discards 2 cards)
+    FilterToTwo #1 (Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them)
+    FilterToTwo #2 (The thronebearer chooses an advisor to swap seats with)
+[Filter] player 4 "Pass this card to the king" -> 2 legal move(s):
+    FilterToTwo #0 (Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them)
+    FilterToTwo #1 (The thronebearer chooses an advisor to swap seats with)
+[Enact] player 2 "Choose the card to enact" -> 2 legal move(s):
+    EnactCard #0 (Roll the die, that seat discards 2 cards)
+    EnactCard #1 (Next round the trusted advisor keeps 3 cards and the thronebearer enacts 2 of them)
+  log: --- Round 3 --- thronebearer: Player 3
+
+=== Round 3 (thronebearer: player 2) ===
+[NameAdvisor] player 2 "Choose your trusted advisor" -> 3 legal move(s):
+    NameTrustedAdvisor #0 (player 0)
+    NameTrustedAdvisor #1 (player 1)
+    NameTrustedAdvisor #2 (player 3)
+[SubmitCards] player 0 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (The next trusted advisor must reveal themselves)
+    PlayActionCard #1 (The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish)
+    PlayActionCard #2 (Choose an advisor: they show their hand to the court, then secretly discard 1 card)
+[SubmitCards] player 1 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (The king swaps places with the thronebearer)
+    PlayActionCard #1 (Next round all advice cards are given to the thronebearer instead of the trusted advisor)
+    PlayActionCard #2 (Execute an unrevealed player)
+[SubmitCards] player 4 "Play an action card" -> 3 legal move(s):
+    PlayActionCard #0 (Roll the die, that advisor is next round's trusted advisor)
+    PlayActionCard #1 (The trusted advisor forces another advisor to reveal themselves)
+    PlayActionCard #2 (Choose two advisors: they swap hands with each other)
+[Filter] player 3 "Pass this card to the king" -> 3 legal move(s):
+    FilterToTwo #0 (The king swaps places with the thronebearer)
+    FilterToTwo #1 (The trusted advisor forces another advisor to reveal themselves)
+    FilterToTwo #2 (The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish)
+[Filter] player 3 "Pass this card to the king" -> 2 legal move(s):
+    FilterToTwo #0 (The king swaps places with the thronebearer)
+    FilterToTwo #1 (The trusted advisor forces another advisor to reveal themselves)
+[Filter] player 3 "Pass this card to the king" -> 1 legal move(s):
+    FilterToTwo #0 (The king swaps places with the thronebearer)
+[Enact] player 2 "Choose the card to enact" -> 3 legal move(s):
+    EnactCard #0 (The thronebearer looks at the top 3 cards of the deck, then distributes them to advisors as they wish)
+    EnactCard #1 (The trusted advisor forces another advisor to reveal themselves)
+    EnactCard #2 (The king swaps places with the thronebearer)
+[AbilityEffect] player 2 "Give "Trade Places" to which advisor?" -> 4 legal move(s):
+    TradeHands #0 (player 0)
+    TradeHands #1 (player 1)
+    TradeHands #2 (player 3)
+    TradeHands #3 (player 4)
+[AbilityEffect] player 2 "Give "Charity" to which advisor?" -> 4 legal move(s):
+    Execute #0 (player 0)
+    Execute #1 (player 1)
+    Execute #2 (player 3)
+    Execute #3 (player 4)
+[AbilityEffect] player 2 "Give "Silent Execution" to which advisor?" -> 4 legal move(s):
+    Execute #0 (player 0)
+    Execute #1 (player 1)
+    Execute #2 (player 3)
+    Execute #3 (player 4)
+[Enact] player 2 "Choose the card to enact" -> 2 legal move(s):
+    EnactCard #0 (The trusted advisor forces another advisor to reveal themselves)
+    EnactCard #1 (The king swaps places with the thronebearer)
+[AbilityEffect] player 3 "Force which advisor to reveal?" -> 3 legal move(s):
+    Reveal #0 (player 0)
+    Reveal #1 (player 1)
+    Reveal #2 (player 4)
+
+Completed 2 round(s), result: (still running, hit round cap)
+No errors.

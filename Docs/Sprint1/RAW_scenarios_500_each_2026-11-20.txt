@@ -1,0 +1,8 @@
+The Quiet Court (5p, cap 10, hand 3): Loyalists 33, Traitors 133, Jester 28, Draw 306
+The Crowded Table (8p, cap 0, hand 3): Loyalists 97, Traitors 199, Jester 116, Reaper 2, Lovers 7, Draw 79
+The Falling Hourglass (6p, cap 0, hand 3): Loyalists 43, Traitors 331, Jester 77, Draw 49 | scenario-end fired 175/500 times
+The Marked Court (7p, cap 12, hand 3): Loyalists 45, Traitors 105, Jester 84, Reaper 2, Lovers 10, Draw 254
+The Poisoned Crown (6p, cap 4, hand 4, no refill): Loyalists 2, Traitors 23, Jester 22, Draw 453 | scenario-end fired 0/500 times
+  FAIL: scenario end condition never fired across 500 games - dead code?
+1 FAILURES
+exit=1
